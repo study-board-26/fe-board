@@ -1,0 +1,1664 @@
+<!DOCTYPE html><html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>FE 進捗ボード</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png" type="image/png">
+<meta name="theme-color" media="(prefers-color-scheme:light)" content="#faf9f7">
+<meta name="theme-color" media="(prefers-color-scheme:dark)" content="#171614">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FE進捗">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+:root{--bg:#faf9f7;--card:#fff;--ink:#1c1a17;--sub:#6b6560;--line:#e6e1db;--faint:#f1eee9;
+ --acc:#b4531f;--accs:#fdf3ec;--ok:#2e7d46;--half:#8a6a1f;--halfs:#f8f1de;--miss:#8d8781;--chart:#b4531f}
+@media(prefers-color-scheme:dark){:root{--bg:#171614;--card:#201e1b;--ink:#efece7;--sub:#a8a199;
+ --line:#332f2b;--faint:#282521;--acc:#e08a52;--accs:#2b211a;--ok:#4f9d67;
+ --half:#c9a24d;--halfs:#2a2418;--miss:#7d766f;--chart:#d17a44}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;
+ font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+ -webkit-font-smoothing:antialiased;overflow-wrap:anywhere}
+.w{max-width:560px;margin:0 auto;padding:18px 14px 26px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.lab{font-size:11.5px;font-weight:700;letter-spacing:.09em;color:var(--sub);text-transform:uppercase}
+.note{font-size:12.5px;color:var(--sub);margin-top:8px;line-height:1.6}
+
+.hero{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.hero .num{font-size:56px;font-weight:800;line-height:.9;letter-spacing:-.03em;color:var(--acc);font-variant-numeric:tabular-nums}
+.hero .unit{font-size:17px;font-weight:700;padding-bottom:5px}
+.hero .side{margin-left:auto;text-align:right;font-size:13px;color:var(--sub);line-height:1.5;padding-bottom:3px}
+.hero .side b{display:block;font-size:16px;color:var(--ink)}
+.meter{margin-top:15px}
+.mrow{display:flex;align-items:baseline;gap:7px;margin-bottom:7px}
+.mrow .b{font-size:26px;font-weight:800;color:var(--ok);line-height:1;font-variant-numeric:tabular-nums}
+.mrow .s{font-size:13px;color:var(--sub);font-weight:700}
+.mrow .p{margin-left:auto;font-size:12.5px;color:var(--sub);font-weight:700}
+.track{height:12px;background:var(--faint);border-radius:99px;overflow:hidden;display:flex}
+.track i{height:100%;background:var(--ok)}
+.track u{height:100%;background:var(--half);opacity:.7}
+.tally{display:flex;gap:13px;margin-top:9px;font-size:12.5px;color:var(--sub);flex-wrap:wrap}
+.tally span{display:inline-flex;align-items:center;gap:5px}
+.tally i{width:11px;height:11px;border-radius:4px;display:inline-block}
+
+.wk{margin-bottom:13px}
+.wkh{display:flex;align-items:baseline;gap:9px;margin-bottom:6px;flex-wrap:wrap}
+.wkr{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wkt{font-size:11.5px;color:var(--sub);line-height:1.35}
+.row{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cell{position:relative;background:var(--faint);border-radius:9px;padding:7px 2px 6px;
+ display:flex;flex-direction:column;align-items:center;gap:1px;min-height:52px}
+.cell .dn{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.cell .dw{font-size:9.5px;color:var(--sub);line-height:1}
+.cell .load{width:60%;height:3px;background:rgba(128,128,128,.22);border-radius:99px;margin-top:3px;overflow:hidden}
+.cell .load i{display:block;height:100%;background:var(--sub);opacity:.55;border-radius:99px}
+.cell.done{background:var(--ok)}.cell.done .dn{color:#fff}
+.cell.done .dw{color:#fff;opacity:.8}.cell.done .load i{background:#fff;opacity:.75}
+.cell.part{background:var(--halfs);box-shadow:inset 0 0 0 2px var(--half)}
+.cell.part .dn{color:var(--half)}
+.cell.miss{opacity:.5}.cell.miss .dn{color:var(--miss)}
+.cell.now{box-shadow:inset 0 0 0 2.5px var(--acc)}
+.cell.now:not(.done):not(.part){background:var(--accs)}
+.cell.now:not(.done):not(.part) .dn{color:var(--acc)}
+.nowtag{position:absolute;top:-7px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;
+ font-size:9px;font-weight:800;padding:1px 6px;border-radius:99px;letter-spacing:.04em;white-space:nowrap}
+.cell.exam{background:transparent;box-shadow:inset 0 0 0 2px var(--ok)}
+.cell.exam .dn{color:var(--ok);font-size:13px}
+.legend{display:flex;flex-wrap:wrap;gap:11px;margin-top:12px;font-size:11.5px;color:var(--sub);
+ border-top:1px solid var(--line);padding-top:11px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:16px;height:16px;border-radius:5px;display:inline-flex;align-items:center;
+ justify-content:center;font-size:9.5px;font-weight:800;color:#fff}
+
+.tdh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:2px 0 3px}
+.tdh .d{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.tdh .w2{font-size:13px;color:var(--sub)}
+.tdh .h{margin-left:auto;font-size:13px;font-weight:800;color:var(--acc);background:var(--accs);padding:3px 11px;border-radius:99px}
+.tdt{font-size:16px;font-weight:700;line-height:1.5;margin-bottom:12px}
+.dsel{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.tick{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.pane{counter-reset:done}
+.tick:checked{counter-increment:done}
+.ptally .cnt::after{content:counter(done)}
+.rep span{display:none}
+.rep{display:block;margin:3px 0 6px;padding:9px 11px;background:var(--card);border:1.5px dashed var(--acc);
+ border-radius:8px;font-size:16px;font-weight:800;color:var(--ink);-webkit-user-select:all;user-select:all}
+.rephint{font-size:11.5px;color:var(--sub)}
+.ptally{display:flex;align-items:center;gap:11px;margin:4px 0 12px}
+.ptally .pt{font-size:13px;font-weight:800;color:var(--ok);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pbar{display:none;flex:1;height:8px;background:var(--faint);border-radius:99px;overflow:hidden}
+body.js .pbar{display:block}
+body.js .btn{display:block}
+.pbar i{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .2s}
+.prep{margin-top:10px;padding:9px 11px;background:var(--accs);border-radius:9px;font-size:12.5px;line-height:1.6}
+.prep b{display:block;font-size:11px;letter-spacing:.06em;color:var(--acc);margin-bottom:4px}
+.prep code{font-family:inherit;font-weight:700;color:var(--ink);word-break:break-all}
+.sstat{font-size:12.5px;font-weight:700;margin:9px 0 10px;padding:8px 11px;border-radius:9px;line-height:1.55}
+.sstat.ok{background:#e8f3ec;color:#1f6b38}
+.sstat.ng{background:#fdf0e6;color:#9a4416}
+@media(prefers-color-scheme:dark){.sstat.ok{background:#1d2a21;color:#7cc394}.sstat.ng{background:#2e2118;color:#e8a06a}}
+.sum{background:var(--faint);border-radius:9px;padding:11px;font-size:13.5px;line-height:1.8;
+ font-weight:700;color:var(--ink);white-space:pre-wrap;word-break:break-all;-webkit-user-select:all;user-select:all}
+.btn{display:none;width:100%;margin-top:10px;padding:13px;border:0;border-radius:11px;
+ background:var(--acc);color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;
+ -webkit-tap-highlight-color:transparent}
+.btn:active{opacity:.8}
+.btn2{background:var(--faint);color:var(--ink)}
+.dtl{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.dtl summary{font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}
+.inp{width:100%;margin-top:9px;padding:11px;border:1.5px solid var(--line);border-radius:10px;
+ background:var(--card);color:var(--ink);font-size:15px;font-family:inherit}
+.saved{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ok);color:#fff;
+ font-size:12.5px;font-weight:700;padding:7px 15px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9}
+.saved.on{opacity:1}
+.pane{display:none}
+.panecard{border:2px solid var(--acc)}
+.cell{cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.pst{margin-left:auto;font-size:12px;font-weight:800;padding:2px 10px;border-radius:99px}
+.pst.done{background:var(--ok);color:#fff}
+.pst.part{background:var(--halfs);color:var(--half);box-shadow:inset 0 0 0 1.5px var(--half)}
+.pst.miss{background:var(--faint);color:var(--miss)}
+.pmemo{margin-top:10px;padding:9px 11px;background:var(--faint);border-radius:9px;font-size:12.5px;line-height:1.65;color:var(--sub)}
+.pmemo b{display:block;font-size:11px;letter-spacing:.06em;margin-bottom:3px}
+.bk{margin-bottom:11px}
+.tdc{float:right;font-size:11.5px;font-weight:800;letter-spacing:0;color:var(--sub);
+ background:var(--faint);border-radius:99px;padding:2px 9px;font-variant-numeric:tabular-nums}
+.tdc.allok{background:var(--ok);color:#fff}
+.secbox{margin:9px 0 13px;padding:9px 11px;background:var(--faint);border-radius:9px;font-size:12.5px;line-height:1.7}
+.secbox b{display:block;font-size:11px;letter-spacing:.06em;color:var(--sub);margin-bottom:3px}
+.secbox span{display:block;color:var(--ink)}
+.bkt{display:flex;gap:8px;align-items:center;font-size:14.5px;line-height:1.45}
+.bkt b{color:var(--acc);font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.bkt .bkn{flex:1;font-weight:600}
+.bkt em{font-style:normal;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mk{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;cursor:pointer;
+ -webkit-tap-highlight-color:transparent;flex:0 0 26px;
+ border-radius:99px;border:2px solid var(--line);background:var(--card);
+ font-size:14px;font-weight:900;line-height:1;color:transparent;transition:background .15s,border-color .15s}
+.mk:active{transform:scale(.9)}
+.bkx{margin:7px 0 0 30px;font-size:13.5px;color:var(--sub);line-height:1.65}
+.bkx a{color:var(--acc);font-weight:700;text-decoration:underline}
+.bkx b{color:var(--ink)}
+.goal{background:var(--bg);border-radius:10px;padding:11px 13px;font-size:13.5px;color:var(--sub);margin-top:14px}
+.goal b{color:var(--ink)}
+
+.syn{background:var(--faint);border-radius:11px;padding:13px 14px;margin-top:11px;font-size:14.5px;line-height:2.05}
+.syn b{color:var(--acc);font-weight:800}
+.syn em{font-style:normal;color:var(--sub);font-size:12.5px}
+.keys{display:grid;gap:7px;margin-top:11px}
+.keys div{display:grid;grid-template-columns:44px 1fr;gap:11px;align-items:center;
+ background:var(--faint);border-radius:10px;padding:8px 12px}
+.keys b{font-size:19px;text-align:center;line-height:1}
+.k1{color:var(--ok)}.k2{color:var(--half)}.k3{color:var(--miss)}
+.keys span{font-size:14px}
+
+.log{margin-top:10px}
+.lr{display:grid;grid-template-columns:62px 32px 1fr;gap:9px;align-items:start;
+ padding:9px 0;border-top:1px solid var(--line)}
+.lr:first-child{border-top:none}
+.lr.lnow{background:var(--accs);border-radius:9px;padding:9px 8px;margin:0 -8px;border-top-color:transparent}
+.ld{font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25}
+.ld em{display:block;font-style:normal;font-size:10.5px;font-weight:600;color:var(--sub)}
+.chip{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+ border-radius:8px;font-size:14px;font-weight:800;color:#fff}
+.chip.done{background:var(--ok)}.chip.part{background:var(--half)}.chip.miss{background:var(--miss)}
+.chip.none{background:transparent;color:var(--sub);border:1.5px dashed var(--line);font-size:11px;font-weight:700}
+.lt{font-size:13.5px;line-height:1.5;color:var(--sub);padding-top:2px}
+.lr.lnow .lt{color:var(--ink)}
+.lt b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-top:3px}
+@media(max-width:360px){.cell{min-height:48px}.cell .dn{font-size:13.5px}.hero .num{font-size:46px}
+ .lr{grid-template-columns:56px 30px 1fr;gap:7px}}
+
+/* ホーム画面アプリのときのノッチ回避 */
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+
+/* 進み具合の判定 */
+.pace{display:none;margin-top:13px;padding:11px 13px;border-radius:10px;font-size:13.5px;font-weight:800;line-height:1.6}
+body.js .pace{display:block}
+.pace em{display:block;font-style:normal;font-weight:600;font-size:12.5px;margin-top:3px;opacity:.88}
+.pace.ok{background:#e8f3ec;color:#1f6b38}
+.pace.warn{background:#f8f1de;color:#775714}
+.pace.bad{background:#fdf0e6;color:#9a4416}
+@media(prefers-color-scheme:dark){.pace.ok{background:#1d2a21;color:#7cc394}
+ .pace.warn{background:#2a2418;color:#c9a24d}.pace.bad{background:#2e2118;color:#e8a06a}}
+
+/* タイマー */
+.tm{display:none;border:1.5px solid var(--line);background:var(--card);color:var(--sub);
+ font-family:inherit;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;
+ padding:4px 9px;border-radius:99px;cursor:pointer;white-space:nowrap;min-width:52px;
+ -webkit-tap-highlight-color:transparent}
+body.js .tm{display:inline-flex;align-items:center;justify-content:center}
+body.js .bkt em{display:none}
+.tm:active{transform:scale(.94)}
+.tm.on{background:var(--acc);border-color:var(--acc);color:#fff}
+
+/* 正答率 */
+.scnow{display:flex;align-items:flex-end;gap:11px;margin:2px 0 13px}
+.scnow .v{font-size:42px;font-weight:800;line-height:.9;letter-spacing:-.02em;color:var(--acc)}
+.scnow .sub{font-size:12.5px;color:var(--sub);padding-bottom:4px;line-height:1.4}
+.chart{margin:4px 0 6px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.gl{stroke:var(--line);stroke-width:1}
+.ax{fill:var(--sub);font-size:9px;font-family:inherit;font-variant-numeric:tabular-nums}
+.goalline{stroke:var(--sub);stroke-width:1.5;stroke-dasharray:5 4;opacity:.5}
+.goaltx{fill:var(--sub);font-size:9.5px;font-weight:700;font-family:inherit;
+ stroke:var(--card);stroke-width:3;paint-order:stroke fill;stroke-linejoin:round}
+.ln{fill:none;stroke:var(--chart);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.dotr{fill:var(--card)}
+.dot{fill:var(--chart)}
+.val{fill:var(--ink);font-size:11px;font-weight:800;font-family:inherit;font-variant-numeric:tabular-nums;
+ stroke:var(--card);stroke-width:3.5;paint-order:stroke fill;stroke-linejoin:round}
+.empty{font-size:12.5px;color:var(--sub);line-height:1.6;background:var(--faint);border-radius:9px;padding:13px}
+.scf{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px}
+.scf .wide{grid-column:1 / -1}
+.scf input{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:10px;
+ background:var(--card);color:var(--ink);font-size:16px;font-family:inherit}
+.scf button{grid-column:1 / -1;padding:12px;border:0;border-radius:11px;background:var(--acc);
+ color:#fff;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.scf button:active{opacity:.8}
+.srh,.sr{display:grid;grid-template-columns:1fr 1fr 1fr 30px;gap:6px;align-items:center;
+ padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;font-variant-numeric:tabular-nums}
+.srh{font-size:11px;letter-spacing:.05em;color:var(--sub);font-weight:700;border-top:none}
+.sd{font-weight:800}.sn{color:var(--sub)}
+.sp{font-weight:800}.sp.hit{color:var(--ok)}
+.sx{border:0;background:transparent;color:var(--miss);font-size:17px;font-family:inherit;
+ cursor:pointer;padding:2px;line-height:1;-webkit-tap-highlight-color:transparent}
+.ta{width:100%;margin-top:8px;padding:10px;border:1.5px solid var(--line);border-radius:10px;
+ background:var(--faint);color:var(--ink);font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+ resize:vertical;min-height:62px;-webkit-user-select:all;user-select:all}
+#d0:checked~.w #p0,#d1:checked~.w #p1,#d2:checked~.w #p2,#d3:checked~.w #p3,#d4:checked~.w #p4,#d5:checked~.w #p5,#d6:checked~.w #p6,#d7:checked~.w #p7,#d8:checked~.w #p8,#d9:checked~.w #p9,#d10:checked~.w #p10,#d11:checked~.w #p11,#d12:checked~.w #p12,#d13:checked~.w #p13,#d14:checked~.w #p14,#d15:checked~.w #p15,#d16:checked~.w #p16,#d17:checked~.w #p17,#d18:checked~.w #p18,#d19:checked~.w #p19,#d20:checked~.w #p20,#d21:checked~.w #p21,#d22:checked~.w #p22,#d23:checked~.w #p23,#d24:checked~.w #p24,#d25:checked~.w #p25,#d26:checked~.w #p26,#d27:checked~.w #p27,#d28:checked~.w #p28,#d29:checked~.w #p29,#d30:checked~.w #p30{display:block}
+#d0:checked~.w label[for=d0],#d1:checked~.w label[for=d1],#d2:checked~.w label[for=d2],#d3:checked~.w label[for=d3],#d4:checked~.w label[for=d4],#d5:checked~.w label[for=d5],#d6:checked~.w label[for=d6],#d7:checked~.w label[for=d7],#d8:checked~.w label[for=d8],#d9:checked~.w label[for=d9],#d10:checked~.w label[for=d10],#d11:checked~.w label[for=d11],#d12:checked~.w label[for=d12],#d13:checked~.w label[for=d13],#d14:checked~.w label[for=d14],#d15:checked~.w label[for=d15],#d16:checked~.w label[for=d16],#d17:checked~.w label[for=d17],#d18:checked~.w label[for=d18],#d19:checked~.w label[for=d19],#d20:checked~.w label[for=d20],#d21:checked~.w label[for=d21],#d22:checked~.w label[for=d22],#d23:checked~.w label[for=d23],#d24:checked~.w label[for=d24],#d25:checked~.w label[for=d25],#d26:checked~.w label[for=d26],#d27:checked~.w label[for=d27],#d28:checked~.w label[for=d28],#d29:checked~.w label[for=d29],#d30:checked~.w label[for=d30]{box-shadow:inset 0 0 0 2.5px var(--acc);background:var(--accs)}
+#c0_1:checked~#b0_1 .mk,#c0_2:checked~#b0_2 .mk,#c0_3:checked~#b0_3 .mk,#c0_4:checked~#b0_4 .mk,#c1_1:checked~#b1_1 .mk,#c1_2:checked~#b1_2 .mk,#c1_3:checked~#b1_3 .mk,#c2_1:checked~#b2_1 .mk,#c2_2:checked~#b2_2 .mk,#c2_3:checked~#b2_3 .mk,#c2_4:checked~#b2_4 .mk,#c3_1:checked~#b3_1 .mk,#c3_2:checked~#b3_2 .mk,#c3_3:checked~#b3_3 .mk,#c3_4:checked~#b3_4 .mk,#c4_1:checked~#b4_1 .mk,#c4_2:checked~#b4_2 .mk,#c4_3:checked~#b4_3 .mk,#c4_4:checked~#b4_4 .mk,#c5_1:checked~#b5_1 .mk,#c5_2:checked~#b5_2 .mk,#c5_3:checked~#b5_3 .mk,#c5_4:checked~#b5_4 .mk,#c6_1:checked~#b6_1 .mk,#c6_2:checked~#b6_2 .mk,#c6_3:checked~#b6_3 .mk,#c6_4:checked~#b6_4 .mk,#c7_1:checked~#b7_1 .mk,#c7_2:checked~#b7_2 .mk,#c7_3:checked~#b7_3 .mk,#c7_4:checked~#b7_4 .mk,#c8_1:checked~#b8_1 .mk,#c8_2:checked~#b8_2 .mk,#c8_3:checked~#b8_3 .mk,#c8_4:checked~#b8_4 .mk,#c9_1:checked~#b9_1 .mk,#c9_2:checked~#b9_2 .mk,#c9_3:checked~#b9_3 .mk,#c9_4:checked~#b9_4 .mk,#c10_1:checked~#b10_1 .mk,#c10_2:checked~#b10_2 .mk,#c10_3:checked~#b10_3 .mk,#c10_4:checked~#b10_4 .mk,#c11_1:checked~#b11_1 .mk,#c11_2:checked~#b11_2 .mk,#c11_3:checked~#b11_3 .mk,#c11_4:checked~#b11_4 .mk,#c12_1:checked~#b12_1 .mk,#c12_2:checked~#b12_2 .mk,#c12_3:checked~#b12_3 .mk,#c12_4:checked~#b12_4 .mk,#c13_1:checked~#b13_1 .mk,#c13_2:checked~#b13_2 .mk,#c13_3:checked~#b13_3 .mk,#c13_4:checked~#b13_4 .mk,#c14_1:checked~#b14_1 .mk,#c14_2:checked~#b14_2 .mk,#c14_3:checked~#b14_3 .mk,#c14_4:checked~#b14_4 .mk,#c15_1:checked~#b15_1 .mk,#c15_2:checked~#b15_2 .mk,#c15_3:checked~#b15_3 .mk,#c15_4:checked~#b15_4 .mk,#c16_1:checked~#b16_1 .mk,#c16_2:checked~#b16_2 .mk,#c16_3:checked~#b16_3 .mk,#c16_4:checked~#b16_4 .mk,#c17_1:checked~#b17_1 .mk,#c17_2:checked~#b17_2 .mk,#c17_3:checked~#b17_3 .mk,#c17_4:checked~#b17_4 .mk,#c18_1:checked~#b18_1 .mk,#c18_2:checked~#b18_2 .mk,#c18_3:checked~#b18_3 .mk,#c18_4:checked~#b18_4 .mk,#c19_1:checked~#b19_1 .mk,#c19_2:checked~#b19_2 .mk,#c19_3:checked~#b19_3 .mk,#c20_1:checked~#b20_1 .mk,#c20_2:checked~#b20_2 .mk,#c20_3:checked~#b20_3 .mk,#c21_1:checked~#b21_1 .mk,#c21_2:checked~#b21_2 .mk,#c21_3:checked~#b21_3 .mk,#c22_1:checked~#b22_1 .mk,#c22_2:checked~#b22_2 .mk,#c22_3:checked~#b22_3 .mk,#c23_1:checked~#b23_1 .mk,#c23_2:checked~#b23_2 .mk,#c23_3:checked~#b23_3 .mk,#c24_1:checked~#b24_1 .mk,#c24_2:checked~#b24_2 .mk,#c24_3:checked~#b24_3 .mk,#c25_1:checked~#b25_1 .mk,#c25_2:checked~#b25_2 .mk,#c25_3:checked~#b25_3 .mk,#c26_1:checked~#b26_1 .mk,#c26_2:checked~#b26_2 .mk,#c26_3:checked~#b26_3 .mk,#c26_4:checked~#b26_4 .mk,#c27_1:checked~#b27_1 .mk,#c27_2:checked~#b27_2 .mk,#c27_3:checked~#b27_3 .mk,#c28_1:checked~#b28_1 .mk,#c28_2:checked~#b28_2 .mk,#c28_3:checked~#b28_3 .mk,#c29_1:checked~#b29_1 .mk,#c29_2:checked~#b29_2 .mk,#c29_3:checked~#b29_3 .mk,#c29_4:checked~#b29_4 .mk,#c30_1:checked~#b30_1 .mk,#c30_2:checked~#b30_2 .mk,#c30_3:checked~#b30_3 .mk,#c30_4:checked~#b30_4 .mk{background:var(--ok);border-color:var(--ok);color:#fff}
+#c0_1:checked~#b0_1 .mk::after,#c0_2:checked~#b0_2 .mk::after,#c0_3:checked~#b0_3 .mk::after,#c0_4:checked~#b0_4 .mk::after,#c1_1:checked~#b1_1 .mk::after,#c1_2:checked~#b1_2 .mk::after,#c1_3:checked~#b1_3 .mk::after,#c2_1:checked~#b2_1 .mk::after,#c2_2:checked~#b2_2 .mk::after,#c2_3:checked~#b2_3 .mk::after,#c2_4:checked~#b2_4 .mk::after,#c3_1:checked~#b3_1 .mk::after,#c3_2:checked~#b3_2 .mk::after,#c3_3:checked~#b3_3 .mk::after,#c3_4:checked~#b3_4 .mk::after,#c4_1:checked~#b4_1 .mk::after,#c4_2:checked~#b4_2 .mk::after,#c4_3:checked~#b4_3 .mk::after,#c4_4:checked~#b4_4 .mk::after,#c5_1:checked~#b5_1 .mk::after,#c5_2:checked~#b5_2 .mk::after,#c5_3:checked~#b5_3 .mk::after,#c5_4:checked~#b5_4 .mk::after,#c6_1:checked~#b6_1 .mk::after,#c6_2:checked~#b6_2 .mk::after,#c6_3:checked~#b6_3 .mk::after,#c6_4:checked~#b6_4 .mk::after,#c7_1:checked~#b7_1 .mk::after,#c7_2:checked~#b7_2 .mk::after,#c7_3:checked~#b7_3 .mk::after,#c7_4:checked~#b7_4 .mk::after,#c8_1:checked~#b8_1 .mk::after,#c8_2:checked~#b8_2 .mk::after,#c8_3:checked~#b8_3 .mk::after,#c8_4:checked~#b8_4 .mk::after,#c9_1:checked~#b9_1 .mk::after,#c9_2:checked~#b9_2 .mk::after,#c9_3:checked~#b9_3 .mk::after,#c9_4:checked~#b9_4 .mk::after,#c10_1:checked~#b10_1 .mk::after,#c10_2:checked~#b10_2 .mk::after,#c10_3:checked~#b10_3 .mk::after,#c10_4:checked~#b10_4 .mk::after,#c11_1:checked~#b11_1 .mk::after,#c11_2:checked~#b11_2 .mk::after,#c11_3:checked~#b11_3 .mk::after,#c11_4:checked~#b11_4 .mk::after,#c12_1:checked~#b12_1 .mk::after,#c12_2:checked~#b12_2 .mk::after,#c12_3:checked~#b12_3 .mk::after,#c12_4:checked~#b12_4 .mk::after,#c13_1:checked~#b13_1 .mk::after,#c13_2:checked~#b13_2 .mk::after,#c13_3:checked~#b13_3 .mk::after,#c13_4:checked~#b13_4 .mk::after,#c14_1:checked~#b14_1 .mk::after,#c14_2:checked~#b14_2 .mk::after,#c14_3:checked~#b14_3 .mk::after,#c14_4:checked~#b14_4 .mk::after,#c15_1:checked~#b15_1 .mk::after,#c15_2:checked~#b15_2 .mk::after,#c15_3:checked~#b15_3 .mk::after,#c15_4:checked~#b15_4 .mk::after,#c16_1:checked~#b16_1 .mk::after,#c16_2:checked~#b16_2 .mk::after,#c16_3:checked~#b16_3 .mk::after,#c16_4:checked~#b16_4 .mk::after,#c17_1:checked~#b17_1 .mk::after,#c17_2:checked~#b17_2 .mk::after,#c17_3:checked~#b17_3 .mk::after,#c17_4:checked~#b17_4 .mk::after,#c18_1:checked~#b18_1 .mk::after,#c18_2:checked~#b18_2 .mk::after,#c18_3:checked~#b18_3 .mk::after,#c18_4:checked~#b18_4 .mk::after,#c19_1:checked~#b19_1 .mk::after,#c19_2:checked~#b19_2 .mk::after,#c19_3:checked~#b19_3 .mk::after,#c20_1:checked~#b20_1 .mk::after,#c20_2:checked~#b20_2 .mk::after,#c20_3:checked~#b20_3 .mk::after,#c21_1:checked~#b21_1 .mk::after,#c21_2:checked~#b21_2 .mk::after,#c21_3:checked~#b21_3 .mk::after,#c22_1:checked~#b22_1 .mk::after,#c22_2:checked~#b22_2 .mk::after,#c22_3:checked~#b22_3 .mk::after,#c23_1:checked~#b23_1 .mk::after,#c23_2:checked~#b23_2 .mk::after,#c23_3:checked~#b23_3 .mk::after,#c24_1:checked~#b24_1 .mk::after,#c24_2:checked~#b24_2 .mk::after,#c24_3:checked~#b24_3 .mk::after,#c25_1:checked~#b25_1 .mk::after,#c25_2:checked~#b25_2 .mk::after,#c25_3:checked~#b25_3 .mk::after,#c26_1:checked~#b26_1 .mk::after,#c26_2:checked~#b26_2 .mk::after,#c26_3:checked~#b26_3 .mk::after,#c26_4:checked~#b26_4 .mk::after,#c27_1:checked~#b27_1 .mk::after,#c27_2:checked~#b27_2 .mk::after,#c27_3:checked~#b27_3 .mk::after,#c28_1:checked~#b28_1 .mk::after,#c28_2:checked~#b28_2 .mk::after,#c28_3:checked~#b28_3 .mk::after,#c29_1:checked~#b29_1 .mk::after,#c29_2:checked~#b29_2 .mk::after,#c29_3:checked~#b29_3 .mk::after,#c29_4:checked~#b29_4 .mk::after,#c30_1:checked~#b30_1 .mk::after,#c30_2:checked~#b30_2 .mk::after,#c30_3:checked~#b30_3 .mk::after,#c30_4:checked~#b30_4 .mk::after{content:"✓"}
+#c0_1:checked~#b0_1 .bkn,#c0_2:checked~#b0_2 .bkn,#c0_3:checked~#b0_3 .bkn,#c0_4:checked~#b0_4 .bkn,#c1_1:checked~#b1_1 .bkn,#c1_2:checked~#b1_2 .bkn,#c1_3:checked~#b1_3 .bkn,#c2_1:checked~#b2_1 .bkn,#c2_2:checked~#b2_2 .bkn,#c2_3:checked~#b2_3 .bkn,#c2_4:checked~#b2_4 .bkn,#c3_1:checked~#b3_1 .bkn,#c3_2:checked~#b3_2 .bkn,#c3_3:checked~#b3_3 .bkn,#c3_4:checked~#b3_4 .bkn,#c4_1:checked~#b4_1 .bkn,#c4_2:checked~#b4_2 .bkn,#c4_3:checked~#b4_3 .bkn,#c4_4:checked~#b4_4 .bkn,#c5_1:checked~#b5_1 .bkn,#c5_2:checked~#b5_2 .bkn,#c5_3:checked~#b5_3 .bkn,#c5_4:checked~#b5_4 .bkn,#c6_1:checked~#b6_1 .bkn,#c6_2:checked~#b6_2 .bkn,#c6_3:checked~#b6_3 .bkn,#c6_4:checked~#b6_4 .bkn,#c7_1:checked~#b7_1 .bkn,#c7_2:checked~#b7_2 .bkn,#c7_3:checked~#b7_3 .bkn,#c7_4:checked~#b7_4 .bkn,#c8_1:checked~#b8_1 .bkn,#c8_2:checked~#b8_2 .bkn,#c8_3:checked~#b8_3 .bkn,#c8_4:checked~#b8_4 .bkn,#c9_1:checked~#b9_1 .bkn,#c9_2:checked~#b9_2 .bkn,#c9_3:checked~#b9_3 .bkn,#c9_4:checked~#b9_4 .bkn,#c10_1:checked~#b10_1 .bkn,#c10_2:checked~#b10_2 .bkn,#c10_3:checked~#b10_3 .bkn,#c10_4:checked~#b10_4 .bkn,#c11_1:checked~#b11_1 .bkn,#c11_2:checked~#b11_2 .bkn,#c11_3:checked~#b11_3 .bkn,#c11_4:checked~#b11_4 .bkn,#c12_1:checked~#b12_1 .bkn,#c12_2:checked~#b12_2 .bkn,#c12_3:checked~#b12_3 .bkn,#c12_4:checked~#b12_4 .bkn,#c13_1:checked~#b13_1 .bkn,#c13_2:checked~#b13_2 .bkn,#c13_3:checked~#b13_3 .bkn,#c13_4:checked~#b13_4 .bkn,#c14_1:checked~#b14_1 .bkn,#c14_2:checked~#b14_2 .bkn,#c14_3:checked~#b14_3 .bkn,#c14_4:checked~#b14_4 .bkn,#c15_1:checked~#b15_1 .bkn,#c15_2:checked~#b15_2 .bkn,#c15_3:checked~#b15_3 .bkn,#c15_4:checked~#b15_4 .bkn,#c16_1:checked~#b16_1 .bkn,#c16_2:checked~#b16_2 .bkn,#c16_3:checked~#b16_3 .bkn,#c16_4:checked~#b16_4 .bkn,#c17_1:checked~#b17_1 .bkn,#c17_2:checked~#b17_2 .bkn,#c17_3:checked~#b17_3 .bkn,#c17_4:checked~#b17_4 .bkn,#c18_1:checked~#b18_1 .bkn,#c18_2:checked~#b18_2 .bkn,#c18_3:checked~#b18_3 .bkn,#c18_4:checked~#b18_4 .bkn,#c19_1:checked~#b19_1 .bkn,#c19_2:checked~#b19_2 .bkn,#c19_3:checked~#b19_3 .bkn,#c20_1:checked~#b20_1 .bkn,#c20_2:checked~#b20_2 .bkn,#c20_3:checked~#b20_3 .bkn,#c21_1:checked~#b21_1 .bkn,#c21_2:checked~#b21_2 .bkn,#c21_3:checked~#b21_3 .bkn,#c22_1:checked~#b22_1 .bkn,#c22_2:checked~#b22_2 .bkn,#c22_3:checked~#b22_3 .bkn,#c23_1:checked~#b23_1 .bkn,#c23_2:checked~#b23_2 .bkn,#c23_3:checked~#b23_3 .bkn,#c24_1:checked~#b24_1 .bkn,#c24_2:checked~#b24_2 .bkn,#c24_3:checked~#b24_3 .bkn,#c25_1:checked~#b25_1 .bkn,#c25_2:checked~#b25_2 .bkn,#c25_3:checked~#b25_3 .bkn,#c26_1:checked~#b26_1 .bkn,#c26_2:checked~#b26_2 .bkn,#c26_3:checked~#b26_3 .bkn,#c26_4:checked~#b26_4 .bkn,#c27_1:checked~#b27_1 .bkn,#c27_2:checked~#b27_2 .bkn,#c27_3:checked~#b27_3 .bkn,#c28_1:checked~#b28_1 .bkn,#c28_2:checked~#b28_2 .bkn,#c28_3:checked~#b28_3 .bkn,#c29_1:checked~#b29_1 .bkn,#c29_2:checked~#b29_2 .bkn,#c29_3:checked~#b29_3 .bkn,#c29_4:checked~#b29_4 .bkn,#c30_1:checked~#b30_1 .bkn,#c30_2:checked~#b30_2 .bkn,#c30_3:checked~#b30_3 .bkn,#c30_4:checked~#b30_4 .bkn{color:var(--ok);text-decoration:line-through;text-decoration-thickness:1.5px}
+#c0_1:checked~#b0_1 .bkx,#c0_2:checked~#b0_2 .bkx,#c0_3:checked~#b0_3 .bkx,#c0_4:checked~#b0_4 .bkx,#c1_1:checked~#b1_1 .bkx,#c1_2:checked~#b1_2 .bkx,#c1_3:checked~#b1_3 .bkx,#c2_1:checked~#b2_1 .bkx,#c2_2:checked~#b2_2 .bkx,#c2_3:checked~#b2_3 .bkx,#c2_4:checked~#b2_4 .bkx,#c3_1:checked~#b3_1 .bkx,#c3_2:checked~#b3_2 .bkx,#c3_3:checked~#b3_3 .bkx,#c3_4:checked~#b3_4 .bkx,#c4_1:checked~#b4_1 .bkx,#c4_2:checked~#b4_2 .bkx,#c4_3:checked~#b4_3 .bkx,#c4_4:checked~#b4_4 .bkx,#c5_1:checked~#b5_1 .bkx,#c5_2:checked~#b5_2 .bkx,#c5_3:checked~#b5_3 .bkx,#c5_4:checked~#b5_4 .bkx,#c6_1:checked~#b6_1 .bkx,#c6_2:checked~#b6_2 .bkx,#c6_3:checked~#b6_3 .bkx,#c6_4:checked~#b6_4 .bkx,#c7_1:checked~#b7_1 .bkx,#c7_2:checked~#b7_2 .bkx,#c7_3:checked~#b7_3 .bkx,#c7_4:checked~#b7_4 .bkx,#c8_1:checked~#b8_1 .bkx,#c8_2:checked~#b8_2 .bkx,#c8_3:checked~#b8_3 .bkx,#c8_4:checked~#b8_4 .bkx,#c9_1:checked~#b9_1 .bkx,#c9_2:checked~#b9_2 .bkx,#c9_3:checked~#b9_3 .bkx,#c9_4:checked~#b9_4 .bkx,#c10_1:checked~#b10_1 .bkx,#c10_2:checked~#b10_2 .bkx,#c10_3:checked~#b10_3 .bkx,#c10_4:checked~#b10_4 .bkx,#c11_1:checked~#b11_1 .bkx,#c11_2:checked~#b11_2 .bkx,#c11_3:checked~#b11_3 .bkx,#c11_4:checked~#b11_4 .bkx,#c12_1:checked~#b12_1 .bkx,#c12_2:checked~#b12_2 .bkx,#c12_3:checked~#b12_3 .bkx,#c12_4:checked~#b12_4 .bkx,#c13_1:checked~#b13_1 .bkx,#c13_2:checked~#b13_2 .bkx,#c13_3:checked~#b13_3 .bkx,#c13_4:checked~#b13_4 .bkx,#c14_1:checked~#b14_1 .bkx,#c14_2:checked~#b14_2 .bkx,#c14_3:checked~#b14_3 .bkx,#c14_4:checked~#b14_4 .bkx,#c15_1:checked~#b15_1 .bkx,#c15_2:checked~#b15_2 .bkx,#c15_3:checked~#b15_3 .bkx,#c15_4:checked~#b15_4 .bkx,#c16_1:checked~#b16_1 .bkx,#c16_2:checked~#b16_2 .bkx,#c16_3:checked~#b16_3 .bkx,#c16_4:checked~#b16_4 .bkx,#c17_1:checked~#b17_1 .bkx,#c17_2:checked~#b17_2 .bkx,#c17_3:checked~#b17_3 .bkx,#c17_4:checked~#b17_4 .bkx,#c18_1:checked~#b18_1 .bkx,#c18_2:checked~#b18_2 .bkx,#c18_3:checked~#b18_3 .bkx,#c18_4:checked~#b18_4 .bkx,#c19_1:checked~#b19_1 .bkx,#c19_2:checked~#b19_2 .bkx,#c19_3:checked~#b19_3 .bkx,#c20_1:checked~#b20_1 .bkx,#c20_2:checked~#b20_2 .bkx,#c20_3:checked~#b20_3 .bkx,#c21_1:checked~#b21_1 .bkx,#c21_2:checked~#b21_2 .bkx,#c21_3:checked~#b21_3 .bkx,#c22_1:checked~#b22_1 .bkx,#c22_2:checked~#b22_2 .bkx,#c22_3:checked~#b22_3 .bkx,#c23_1:checked~#b23_1 .bkx,#c23_2:checked~#b23_2 .bkx,#c23_3:checked~#b23_3 .bkx,#c24_1:checked~#b24_1 .bkx,#c24_2:checked~#b24_2 .bkx,#c24_3:checked~#b24_3 .bkx,#c25_1:checked~#b25_1 .bkx,#c25_2:checked~#b25_2 .bkx,#c25_3:checked~#b25_3 .bkx,#c26_1:checked~#b26_1 .bkx,#c26_2:checked~#b26_2 .bkx,#c26_3:checked~#b26_3 .bkx,#c26_4:checked~#b26_4 .bkx,#c27_1:checked~#b27_1 .bkx,#c27_2:checked~#b27_2 .bkx,#c27_3:checked~#b27_3 .bkx,#c28_1:checked~#b28_1 .bkx,#c28_2:checked~#b28_2 .bkx,#c28_3:checked~#b28_3 .bkx,#c29_1:checked~#b29_1 .bkx,#c29_2:checked~#b29_2 .bkx,#c29_3:checked~#b29_3 .bkx,#c29_4:checked~#b29_4 .bkx,#c30_1:checked~#b30_1 .bkx,#c30_2:checked~#b30_2 .bkx,#c30_3:checked~#b30_3 .bkx,#c30_4:checked~#b30_4 .bkx{opacity:.45}
+#c0_1:checked~.prep .r0_1,#c0_2:checked~.prep .r0_2,#c0_3:checked~.prep .r0_3,#c0_4:checked~.prep .r0_4,#c1_1:checked~.prep .r1_1,#c1_2:checked~.prep .r1_2,#c1_3:checked~.prep .r1_3,#c2_1:checked~.prep .r2_1,#c2_2:checked~.prep .r2_2,#c2_3:checked~.prep .r2_3,#c2_4:checked~.prep .r2_4,#c3_1:checked~.prep .r3_1,#c3_2:checked~.prep .r3_2,#c3_3:checked~.prep .r3_3,#c3_4:checked~.prep .r3_4,#c4_1:checked~.prep .r4_1,#c4_2:checked~.prep .r4_2,#c4_3:checked~.prep .r4_3,#c4_4:checked~.prep .r4_4,#c5_1:checked~.prep .r5_1,#c5_2:checked~.prep .r5_2,#c5_3:checked~.prep .r5_3,#c5_4:checked~.prep .r5_4,#c6_1:checked~.prep .r6_1,#c6_2:checked~.prep .r6_2,#c6_3:checked~.prep .r6_3,#c6_4:checked~.prep .r6_4,#c7_1:checked~.prep .r7_1,#c7_2:checked~.prep .r7_2,#c7_3:checked~.prep .r7_3,#c7_4:checked~.prep .r7_4,#c8_1:checked~.prep .r8_1,#c8_2:checked~.prep .r8_2,#c8_3:checked~.prep .r8_3,#c8_4:checked~.prep .r8_4,#c9_1:checked~.prep .r9_1,#c9_2:checked~.prep .r9_2,#c9_3:checked~.prep .r9_3,#c9_4:checked~.prep .r9_4,#c10_1:checked~.prep .r10_1,#c10_2:checked~.prep .r10_2,#c10_3:checked~.prep .r10_3,#c10_4:checked~.prep .r10_4,#c11_1:checked~.prep .r11_1,#c11_2:checked~.prep .r11_2,#c11_3:checked~.prep .r11_3,#c11_4:checked~.prep .r11_4,#c12_1:checked~.prep .r12_1,#c12_2:checked~.prep .r12_2,#c12_3:checked~.prep .r12_3,#c12_4:checked~.prep .r12_4,#c13_1:checked~.prep .r13_1,#c13_2:checked~.prep .r13_2,#c13_3:checked~.prep .r13_3,#c13_4:checked~.prep .r13_4,#c14_1:checked~.prep .r14_1,#c14_2:checked~.prep .r14_2,#c14_3:checked~.prep .r14_3,#c14_4:checked~.prep .r14_4,#c15_1:checked~.prep .r15_1,#c15_2:checked~.prep .r15_2,#c15_3:checked~.prep .r15_3,#c15_4:checked~.prep .r15_4,#c16_1:checked~.prep .r16_1,#c16_2:checked~.prep .r16_2,#c16_3:checked~.prep .r16_3,#c16_4:checked~.prep .r16_4,#c17_1:checked~.prep .r17_1,#c17_2:checked~.prep .r17_2,#c17_3:checked~.prep .r17_3,#c17_4:checked~.prep .r17_4,#c18_1:checked~.prep .r18_1,#c18_2:checked~.prep .r18_2,#c18_3:checked~.prep .r18_3,#c18_4:checked~.prep .r18_4,#c19_1:checked~.prep .r19_1,#c19_2:checked~.prep .r19_2,#c19_3:checked~.prep .r19_3,#c20_1:checked~.prep .r20_1,#c20_2:checked~.prep .r20_2,#c20_3:checked~.prep .r20_3,#c21_1:checked~.prep .r21_1,#c21_2:checked~.prep .r21_2,#c21_3:checked~.prep .r21_3,#c22_1:checked~.prep .r22_1,#c22_2:checked~.prep .r22_2,#c22_3:checked~.prep .r22_3,#c23_1:checked~.prep .r23_1,#c23_2:checked~.prep .r23_2,#c23_3:checked~.prep .r23_3,#c24_1:checked~.prep .r24_1,#c24_2:checked~.prep .r24_2,#c24_3:checked~.prep .r24_3,#c25_1:checked~.prep .r25_1,#c25_2:checked~.prep .r25_2,#c25_3:checked~.prep .r25_3,#c26_1:checked~.prep .r26_1,#c26_2:checked~.prep .r26_2,#c26_3:checked~.prep .r26_3,#c26_4:checked~.prep .r26_4,#c27_1:checked~.prep .r27_1,#c27_2:checked~.prep .r27_2,#c27_3:checked~.prep .r27_3,#c28_1:checked~.prep .r28_1,#c28_2:checked~.prep .r28_2,#c28_3:checked~.prep .r28_3,#c29_1:checked~.prep .r29_1,#c29_2:checked~.prep .r29_2,#c29_3:checked~.prep .r29_3,#c29_4:checked~.prep .r29_4,#c30_1:checked~.prep .r30_1,#c30_2:checked~.prep .r30_2,#c30_3:checked~.prep .r30_3,#c30_4:checked~.prep .r30_4{display:inline}
+</style></head><body><input type="radio" name="day" id="d0" class="dsel"><input type="radio" name="day" id="d1" class="dsel"><input type="radio" name="day" id="d2" class="dsel"><input type="radio" name="day" id="d3" class="dsel"><input type="radio" name="day" id="d4" class="dsel"><input type="radio" name="day" id="d5" class="dsel" checked><input type="radio" name="day" id="d6" class="dsel"><input type="radio" name="day" id="d7" class="dsel"><input type="radio" name="day" id="d8" class="dsel"><input type="radio" name="day" id="d9" class="dsel"><input type="radio" name="day" id="d10" class="dsel"><input type="radio" name="day" id="d11" class="dsel"><input type="radio" name="day" id="d12" class="dsel"><input type="radio" name="day" id="d13" class="dsel"><input type="radio" name="day" id="d14" class="dsel"><input type="radio" name="day" id="d15" class="dsel"><input type="radio" name="day" id="d16" class="dsel"><input type="radio" name="day" id="d17" class="dsel"><input type="radio" name="day" id="d18" class="dsel"><input type="radio" name="day" id="d19" class="dsel"><input type="radio" name="day" id="d20" class="dsel"><input type="radio" name="day" id="d21" class="dsel"><input type="radio" name="day" id="d22" class="dsel"><input type="radio" name="day" id="d23" class="dsel"><input type="radio" name="day" id="d24" class="dsel"><input type="radio" name="day" id="d25" class="dsel"><input type="radio" name="day" id="d26" class="dsel"><input type="radio" name="day" id="d27" class="dsel"><input type="radio" name="day" id="d28" class="dsel"><input type="radio" name="day" id="d29" class="dsel"><input type="radio" name="day" id="d30" class="dsel"><div class="w">
+
+<div class="card">
+  <div class="lab">試験まで</div>
+  <div class="hero">
+    <span class="num">25</span><span class="unit">日</span>
+    <span class="side"><b>8月26日（水）</b>基本情報技術者試験</span>
+  </div>
+  <div class="meter">
+    <div class="mrow"><span class="b">3</span><span class="s">/ 30 日 完了</span><span class="p">記録済み 4日</span></div>
+    <div class="track"><i style="width:10%"></i><u style="width:3.3333333333333335%"></u></div>
+    <div class="tally">
+      <span><i style="background:var(--ok)"></i>済 3</span>
+      <span><i style="background:var(--half)"></i>半 1</span>
+      <span><i style="background:var(--miss)"></i>× 0</span>
+      <span><i style="background:var(--faint)"></i>未記録 26</span>
+    </div>
+    <div class="note">ペースの目安は 1日1マス。合計 約73時間（平日2h・休日3.5h）</div>
+    <div class="pace" id="pace"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lab" style="margin-bottom:11px">30日の進み方</div>
+  <div class="wk">
+    <div class="wkh"><span class="wkr">7/27 – 8/2</span><span class="wkt">準備＋基礎理論・アルゴリズム</span></div>
+    <div class="row"><label for="d0" class="cell done"><span class="dn">✓</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d1" class="cell done"><span class="dn">✓</span><span class="dw">火</span><span class="load"><i style="width:44%"></i></span></label><label for="d2" class="cell done"><span class="dn">✓</span><span class="dw">水</span><span class="load"><i style="width:49%"></i></span></label><label for="d3" class="cell part"><span class="dn">◐</span><span class="dw">木</span><span class="load"><i style="width:21%"></i></span></label><label for="d4" class="cell "><span class="dn">31</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d5" class="cell  now"><span class="dn">1</span><span class="dw">土</span><span class="load"><i style="width:114%"></i></span><span class="nowtag">今日</span></label><label for="d6" class="cell "><span class="dn">2</span><span class="dw">日</span><span class="load"><i style="width:119%"></i></span></label></div>
+  </div>
+  <div class="wk">
+    <div class="wkh"><span class="wkr">8/3 – 8/9</span><span class="wkt">コンピュータ〜DB・NW・セキュリティ</span></div>
+    <div class="row"><label for="d7" class="cell "><span class="dn">3</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d8" class="cell "><span class="dn">4</span><span class="dw">火</span><span class="load"><i style="width:35%"></i></span></label><label for="d9" class="cell "><span class="dn">5</span><span class="dw">水</span><span class="load"><i style="width:53%"></i></span></label><label for="d10" class="cell "><span class="dn">6</span><span class="dw">木</span><span class="load"><i style="width:35%"></i></span></label><label for="d11" class="cell "><span class="dn">7</span><span class="dw">金</span><span class="load"><i style="width:44%"></i></span></label><label for="d12" class="cell "><span class="dn">8</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d13" class="cell "><span class="dn">9</span><span class="dw">日</span><span class="load"><i style="width:119%"></i></span></label></div>
+  </div>
+  <div class="wk">
+    <div class="wkh"><span class="wkr">8/10 – 8/16</span><span class="wkt">開発・マネジメント・ストラテジ</span></div>
+    <div class="row"><label for="d14" class="cell "><span class="dn">10</span><span class="dw">月</span><span class="load"><i style="width:44%"></i></span></label><label for="d15" class="cell "><span class="dn">11</span><span class="dw">火</span><span class="load"><i style="width:100%"></i></span></label><label for="d16" class="cell "><span class="dn">12</span><span class="dw">水</span><span class="load"><i style="width:30%"></i></span></label><label for="d17" class="cell "><span class="dn">13</span><span class="dw">木</span><span class="load"><i style="width:30%"></i></span></label><label for="d18" class="cell "><span class="dn">14</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d19" class="cell "><span class="dn">15</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d20" class="cell "><span class="dn">16</span><span class="dw">日</span><span class="load"><i style="width:100%"></i></span></label></div>
+  </div>
+  <div class="wk">
+    <div class="wkh"><span class="wkr">8/17 – 8/23</span><span class="wkt">演習・模試・本番通し</span></div>
+    <div class="row"><label for="d21" class="cell "><span class="dn">17</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d22" class="cell "><span class="dn">18</span><span class="dw">火</span><span class="load"><i style="width:30%"></i></span></label><label for="d23" class="cell "><span class="dn">19</span><span class="dw">水</span><span class="load"><i style="width:30%"></i></span></label><label for="d24" class="cell "><span class="dn">20</span><span class="dw">木</span><span class="load"><i style="width:30%"></i></span></label><label for="d25" class="cell "><span class="dn">21</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d26" class="cell "><span class="dn">22</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d27" class="cell "><span class="dn">23</span><span class="dw">日</span><span class="load"><i style="width:100%"></i></span></label></div>
+  </div>
+  <div class="wk">
+    <div class="wkh"><span class="wkr">8/24 – 8/26</span><span class="wkt">最終仕上げ → 本番</span></div>
+    <div class="row"><label for="d28" class="cell "><span class="dn">24</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d29" class="cell "><span class="dn">25</span><span class="dw">火</span><span class="load"><i style="width:30%"></i></span></label><label for="d30" class="cell  exam"><span class="dn">26</span><span class="dw">水</span></label></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--ok)">✓</i>済</span>
+    <span><i style="background:var(--halfs);box-shadow:inset 0 0 0 2px var(--half);color:var(--half)">◐</i>半</span>
+    <span><i style="background:var(--faint);color:var(--miss)">×</i>できず</span>
+    <span><i style="background:var(--accs);box-shadow:inset 0 0 0 2px var(--acc)"></i>今日</span>
+    <span>細い線 = 学習量（長い＝3.5h）</span>
+    <span style="width:100%;color:var(--acc);font-weight:700">👆 日付をタップすると、その日の予定が下に出ます</span>
+    <span style="width:100%">緑の✓ = チャットで記録済み（このボードに焼き込み済み）</span>
+  </div>
+</div>
+
+<div class="card panecard">
+<div class="pane" id="p0" data-day="0" data-total="4">
+  <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">7/27</span><span class="w2">（月）</span><span class="h">2.0h</span><span class="pst done">済</span></div>
+  <div class="tdt">準備日 ─ 申込確認・実力測定・環境づくり</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>00-01 基本情報技術者試験とは</span><span>00-02 [科目A]と[科目B]の試験内容</span><span>00-03 効果的な学習方法</span></div>
+  <input type="checkbox" class="tick" id="c0_1" checked><input type="checkbox" class="tick" id="c0_2" checked><input type="checkbox" class="tick" id="c0_3" checked><input type="checkbox" class="tick" id="c0_4" checked>
+   <div class="bk" id="b0_1">
+     <div class="bkt"><label for="c0_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">8/26のCBT予約を確認</span><em>20分</em><button type="button" class="tm" data-for="c0_1" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">未申込なら今この場で申込む。会場・集合時刻・持ち物をカレンダーに登録。</div>
+   </div>
+   <div class="bk" id="b0_2">
+     <div class="bkt"><label for="c0_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">教科書の序章を読む</span><em>30分</em><button type="button" class="tm" data-for="c0_2" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     <div class="bkx">「試験の概要と効果的な学習方法」。試験の全体像と配点感覚をここで掴む。</div>
+   </div>
+   <div class="bk" id="b0_3">
+     <div class="bkt"><label for="c0_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">実力測定：過去問道場で科目A 20問</span><em>40分</em><button type="button" class="tm" data-for="c0_3" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">分野ランダム・時間計測。今の正答率をメモ（これが出発点）。解説は読まなくてよい。</div>
+   </div>
+   <div class="bk" id="b0_4">
+     <div class="bkt"><label for="c0_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">科目Bを1問だけ眺める + 環境セットアップ</span><em>30分</em><button type="button" class="tm" data-for="c0_4" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     <div class="bkx">IPA公開サンプル問題を1問。解けなくて当然なので落ち込まない。過去問道場のアカウントを作りスマホにブックマーク。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>科目Aの現在の正答率を数字で把握する。ここから30日でこれを80%に上げる。</div>
+  <div class="pmemo"><b>チャットでの記録</b>CBT予約済み／過去問A20問 正答率65%／序章・科目B着手＋アカウント作成済み</div>
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/27<span class="r0_1"> 1済</span><span class="r0_2"> 2済</span><span class="r0_3"> 3済</span><span class="r0_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p1" data-day="1" data-total="3">
+  <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">7/28</span><span class="w2">（火）</span><span class="h">2.3h</span><span class="pst done">済</span></div>
+  <div class="tdt">第1章 基礎理論①（データの単位〜2進数の四則演算）</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>01-01 データの単位</span><span>01-02 数値の数え方</span><span>01-03 基数変換と桁の重み</span><span>01-04 さまざまな基数変換</span><span>01-05 負の2進数</span><span>01-06 2進数の四則演算</span></div>
+  <input type="checkbox" class="tick" id="c1_1" checked><input type="checkbox" class="tick" id="c1_2" checked><input type="checkbox" class="tick" id="c1_3" checked>
+   <div class="bk" id="b1_1">
+     <div class="bkt"><label for="c1_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B：擬似言語のルールを覚える（動画）</span><em>40分</em><button type="button" class="tm" data-for="c1_1" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0PlzYNtyJBGrbN-0IbJe-Ij">『B試験_アルゴリズム』プレイリスト（全13本）</a>から<a href="https://www.youtube.com/watch?v=0LmEsTsECHo">03. 疑似言語の基本を学ぶ</a>（約15分）を見る→動画内の例題を一緒に手を動かして解く。</div>
+   </div>
+   <div class="bk" id="b1_2">
+     <div class="bkt"><label for="c1_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">動画で学ぶ：基数変換・シフト演算</span><em>70分</em><button type="button" class="tm" data-for="c1_2" data-min="70" aria-label="70分のタイマーを開始">70分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0NpqKakI3BYztLRuIfBUHtL">『A試験_基礎理論』プレイリスト（全11本）</a>を<b>01から順番に</b>：<a href="https://www.youtube.com/watch?v=YZYxu6RyQIA">01. n進数の概念</a>・<a href="https://www.youtube.com/watch?v=acbZUSyqJks">02. 基数変換</a>・<a href="https://www.youtube.com/watch?v=EFSR8WE2loQ">03. 2進数の足し算・引き算</a>・<a href="https://www.youtube.com/watch?v=0YfVAoWvbIs">04. シフト演算（2進数のかけ算・割り算）</a>。<b>補数は03に入っています</b>（教科書を読む必要なし）。動画を一時停止して一緒に計算する。</div>
+   </div>
+   <div class="bk" id="b1_3">
+     <div class="bkt"><label for="c1_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">演習（問題集のみ）</span><em>30分</em><button type="button" class="tm" data-for="c1_3" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     <div class="bkx">出る順問題集の該当問題（01-01〜01-06）を解く。<b>過去問道場はまだ使わない</b>：道場の分類は「1. 基礎理論」までしか絞れず、第2章の範囲（集合と論理演算・論理回路・逆ポーランド・オートマトン・AI）が混ざるため。道場は<b>7/31（第2章まで終わった後）にまとめて</b>やります。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>10進↔2進↔16進の変換と負の2進数（補数）を、電卓なしで即答できる。</div>
+  <div class="pmemo"><b>チャットでの記録</b>1〜3すべて実施。出る順問題集は完了。過去問道場は分類が広く範囲外の問題が多かったため中断（→分野別過去問題の小分類に切替済み）</div>
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/28<span class="r1_1"> 1済</span><span class="r1_2"> 2済</span><span class="r1_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p2" data-day="2" data-total="4">
+  <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">7/29</span><span class="w2">（水）</span><span class="h">2.4h</span><span class="pst done">済</span></div>
+  <div class="tdt">第2章① 集合と論理演算・論理回路</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>02-01 集合と論理演算</span><span>02-02 論理回路</span></div>
+  <input type="checkbox" class="tick" id="c2_1" checked><input type="checkbox" class="tick" id="c2_2" checked><input type="checkbox" class="tick" id="c2_3" checked><input type="checkbox" class="tick" id="c2_4" checked>
+   <div class="bk" id="b2_1">
+     <div class="bkt"><label for="c2_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c2_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>7/28（1日前）</b> 第1章 基礎理論①（データの単位〜2進数の四則演算）<br>&nbsp;&nbsp;→ 確認：10進↔2進↔16進の変換と負の2進数（補数）を、電卓なしで即答できる。</div>
+   </div>
+   <div class="bk" id="b2_2">
+     <div class="bkt"><label for="c2_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：順次・選択（if）（動画）</span><em>40分</em><button type="button" class="tm" data-for="c2_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0PlzYNtyJBGrbN-0IbJe-Ij">『B試験_アルゴリズム』プレイリスト（全13本）</a>の続き：<a href="https://www.youtube.com/watch?v=p5HptAkCCYQ">04. アルゴリズム練習_疑似言語を読む</a>（トレース表の書き方）。<br><b>公式問題で確認</b>：さいとうさんの解説から <a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=63s">問1 変数（2分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=186s">問2 条件分岐(if文)（4分）</a>（変数・if文）。IPA公式サンプルの実物なので、本番の問題文の癖がここで掴めます。動画のトレース表をそのまま真似して教科書の類題を1問。</div>
+   </div>
+   <div class="bk" id="b2_3">
+     <div class="bkt"><label for="c2_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：論理演算・確率統計・誤差</span><em>73分</em><button type="button" class="tm" data-for="c2_3" data-min="73" aria-label="73分のタイマーを開始">73分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0NpqKakI3BYztLRuIfBUHtL">『A試験_基礎理論』プレイリスト（全11本）</a>の続き：<a href="https://www.youtube.com/watch?v=FyhPGODEvj0">05. 数の表現と誤差</a>・<a href="https://www.youtube.com/watch?v=KdJ5CTgxZbM">06. 論理演算と論理回路</a>・<a href="https://www.youtube.com/watch?v=pW18A5-YhHI">07. 論理演算の公式と問題演習</a>・<a href="https://www.youtube.com/watch?v=Dcmm1eKnMdc">10. 確率</a>・<a href="https://www.youtube.com/watch?v=WzJx14h_r3U">11. 線形代数と統計（補足動画）</a>。<b>ドモルガンの法則は07（論理演算の公式と問題演習）</b>、<b>統計は11</b>に入っています。08・09は明日以降で使うので今日は飛ばしてOK。集合・ベン図だけ該当回がないので教科書で補完。</div>
+   </div>
+   <div class="bk" id="b2_4">
+     <div class="bkt"><label for="c2_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">第1章の章末問題</span><em>20分</em><button type="button" class="tm" data-for="c2_4" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">第1章の章末問題を全問。<b>道場はまだ使わない</b>（明後日7/30にまとめて実施）。間違えた問題に付箋を貼る。この付箋が8/21以降の復習リストになる。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>ベン図とXOR・ドモルガンの法則を説明でき、基本的な真理値表が書ける。</div>
+  <div class="pmemo"><b>チャットでの記録</b>1〜4すべて実施。第1章 完了</div>
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/29<span class="r2_1"> 1済</span><span class="r2_2"> 2済</span><span class="r2_3"> 3済</span><span class="r2_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p3" data-day="3" data-total="4">
+  <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">7/30</span><span class="w2">（木）</span><span class="h">1.8h</span><span class="pst part">半</span></div>
+  <div class="tdt">第2章② 逆ポーランド記法・オートマトン・AI</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>02-03 計算式の表し方（逆ポーランド記法）</span><span>02-04 オートマトン</span><span>02-05 AI（人工知能）</span></div>
+  <input type="checkbox" class="tick" id="c3_1"><input type="checkbox" class="tick" id="c3_2" checked><input type="checkbox" class="tick" id="c3_3" checked><input type="checkbox" class="tick" id="c3_4">
+   <div class="bk" id="b3_1">
+     <div class="bkt"><label for="c3_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c3_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>7/29（1日前）</b> 第2章① 集合と論理演算・論理回路<br>&nbsp;&nbsp;→ 確認：ベン図とXOR・ドモルガンの法則を説明でき、基本的な真理値表が書ける。</div>
+   </div>
+   <div class="bk" id="b3_2">
+     <div class="bkt"><label for="c3_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：繰り返し（while / for）</span><em>40分</em><button type="button" class="tm" data-for="c3_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">ループ問題を2問トレース。<b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=450s">問3 繰り返し(for文)（3分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=611s">問4 繰り返し(while文)（7分）</a>（for文・while文）。<b>「ループが何回回るか」を声に出して数える</b>クセをつける。</div>
+   </div>
+   <div class="bk" id="b3_3">
+     <div class="bkt"><label for="c3_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">科目A 第2章②：逆ポーランド・オートマトン・AI</span><em>30分</em><button type="button" class="tm" data-for="c3_3" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     <div class="bkx">教科書の範囲は<b>02-03 計算式の表し方（逆ポーランド記法）・02-04 オートマトン・02-05 AI</b>の3項目だけです。<br><b>動画がある項目</b>：オートマトン/状態遷移表は<a href="https://www.youtube.com/watch?v=WkCi7EYY7jw">09. 状態遷移図とビット演算</a>、AI・機械学習は<a href="https://www.youtube.com/watch?v=I7yjUiL2gWw">08. 機械学習とディープラーニング</a>（データベースのプレイリストに入っています）。<br><b>動画が無い項目</b>：02-03 逆ポーランド記法のみ。教科書＋<a href="https://www.fe-siken.com/fekakomon.php">過去問道場</a>の解説で対応。コツは<b>「後ろから演算子を見て、直前の2つに適用する」</b>だけ。1〜2問解けば形が掴めます。<br><b>優先度</b>：AI（近年頻出）＞ オートマトン ＞ 逆ポーランド。深追い禁止、用語と解き方の形が分かればOK。<!--REF--><br><small>※統計が未視聴なら <a href="https://www.youtube.com/watch?v=WzJx14h_r3U">11. 線形代数と統計（補足動画）</a> も（7/29の範囲）。</small></div>
+   </div>
+   <div class="bk" id="b3_4">
+     <div class="bkt"><label for="c3_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習＋道場まとめ（基礎理論）</span><em>30分</em><button type="button" class="tm" data-for="c3_4" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     <div class="bkx">章末問題（02-03〜02-05）＋<a href="https://www.fe-siken.com/fekakomon.php">過去問道場</a>『1. 基礎理論』だけチェックを残して<b>20問</b>（第1章＋第2章の2日分をまとめて演習）。中分類「基礎理論」を1周したので範囲外は出ません。<b>AI用語と論理演算は頻出</b>なので確実に。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>第2章を完了。AIの用語を区別でき、捨てる問題も見極められる。</div>
+  <div class="pmemo"><b>チャットでの記録</b>2済：科目B 繰り返し（while/for）＋公式問3・問4／3済：科目A第2章の動画＋第3章①の動画も前倒し視聴、第2章の教科書問題も実施。1（高速復習）と4（章末＋道場20問）は未着手</div>
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/30<span class="r3_1"> 1済</span><span class="r3_2"> 2済</span><span class="r3_3"> 3済</span><span class="r3_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p4" data-day="4" data-total="4">
+  <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">7/31</span><span class="w2">（金）</span><span class="h">2.0h</span></div>
+  <div class="tdt">キャッチアップ ＋ 第3章 03-01 データ構造</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>03-01 データ構造</span><span>22-01 [科目B]の特徴</span></div>
+  <input type="checkbox" class="tick" id="c4_1"><input type="checkbox" class="tick" id="c4_2"><input type="checkbox" class="tick" id="c4_3"><input type="checkbox" class="tick" id="c4_4">
+   <div class="bk" id="b4_1">
+     <div class="bkt"><label for="c4_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c4_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>7/30（1日前）</b> 第2章② 逆ポーランド記法・オートマトン・AI<br>&nbsp;&nbsp;→ 確認：第2章を完了。AIの用語を区別でき、捨てる問題も見極められる。<br>・<b>7/28（3日前）</b> 第1章 基礎理論①（データの単位〜2進数の四則演算）<br>&nbsp;&nbsp;→ 確認：10進↔2進↔16進の変換と負の2進数（補数）を、電卓なしで即答できる。</div>
+   </div>
+   <div class="bk" id="b4_2">
+     <div class="bkt"><label for="c4_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：繰り返し（while / for）※7/30の未着手分</span><em>40分</em><button type="button" class="tm" data-for="c4_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx"><b>7/30に手をつけられなかった分をここで回収します。</b>動画は7/29に見た<a href="https://www.youtube.com/watch?v=p5HptAkCCYQ">04. アルゴリズム練習_疑似言語を読む</a>で足りるので、見返すのは詰まった時だけ。ループ問題を2問トレースする。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=450s">問3 繰り返し(for文)（3分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=611s">問4 繰り返し(while文)（7分）</a>。<b>「ループが何回回るか」を声に出して数える</b>のがコツ。<!--REF--><br><small>※擬似言語の読み方そのものが不安な場合の任意教材：<a href="https://www.youtube.com/playlist?list=PLi30bEmgvtEA1uQcrGcMD28a3bdyHkUZ_">さいとうさん『科目B対策』（全6本）</a>の<a href="https://www.youtube.com/watch?v=waAwVXa9y2o">【初心者向け】科目B|アルゴリズムをゼロから理解する</a>（72分）。倍速＋一時停止で、時間が取れる日に通しで。</small></div>
+   </div>
+   <div class="bk" id="b4_3">
+     <div class="bkt"><label for="c4_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">道場まとめ（基礎理論）※7/30の未着手分</span><em>40分</em><button type="button" class="tm" data-for="c4_3" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx"><a href="https://www.fe-siken.com/fekakomon.php">過去問道場</a>『1. 基礎理論』だけチェックを残して<b>25問</b>（7/30の未着手分＝第1章＋第2章の総仕上げ）。中分類を1周したので範囲外は出ません。<b>正答率をメモ</b>してください（7/27の65%からの伸びが見えます）。間違えた問題は分野名だけ1行メモ→8/21以降の復習リストに。</div>
+   </div>
+   <div class="bk" id="b4_4">
+     <div class="bkt"><label for="c4_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">第3章① データ構造の章末問題</span><em>30分</em><button type="button" class="tm" data-for="c4_4" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     <div class="bkx">第3章① データ構造の章末問題。動画は7/30に視聴済みなので<b>ここは問題だけ</b>。スタック（LIFO）／キュー（FIFO）／リストのポインタ付け替えを<b>図に描いて</b>説明できるか確認。明日の探索・整列の土台です。<!--REF--><br><small>※7/30に視聴済みの動画（詰まった時の戻り先）：<a href="https://www.youtube.com/watch?v=b-BbVKynB7c">00. B試験アルゴリズムの特徴と対策</a>・<a href="https://www.youtube.com/watch?v=GLrlw9yOcEg">01. アルゴリズム問題の対策</a>・<a href="https://www.youtube.com/watch?v=Vqx40iaS9lw">02. 基本的なアルゴリズム一覧</a>／<a href="https://www.youtube.com/watch?v=QeYrObnM508">01. プログラムの基本を説明</a>・<a href="https://www.youtube.com/watch?v=7Z_bMopSBjA">02. 基本アルゴリズムの説明</a></small></div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>科目Bのループトレースができ、スタック/キュー/リストを図で説明できる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/31<span class="r4_1"> 1済</span><span class="r4_2"> 2済</span><span class="r4_3"> 3済</span><span class="r4_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p5" data-day="5" data-total="4">
+  <div class="lab" style="color:var(--acc)">今日のメニュー<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/1</span><span class="w2">（土）</span><span class="h">3.8h</span></div>
+  <div class="tdt">第3章 03-02〜03-05 ＋ 第12章 12-04 オブジェクト指向</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>03-02 アルゴリズムの基本</span><span>03-03 アルゴリズムの分類</span><span>03-04 プログラムの性質と種類</span><span>03-05 その他の言語</span><span>12-04 プログラミングとオブジェクト指向</span></div>
+  <input type="checkbox" class="tick" id="c5_1"><input type="checkbox" class="tick" id="c5_2"><input type="checkbox" class="tick" id="c5_3"><input type="checkbox" class="tick" id="c5_4">
+   <div class="bk" id="b5_1">
+     <div class="bkt"><label for="c5_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>15分</em><button type="button" class="tm" data-for="c5_1" data-min="15" aria-label="15分のタイマーを開始">15分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>7/31（1日前）</b> キャッチアップ ＋ 第3章 03-01 データ構造<br>&nbsp;&nbsp;→ 確認：科目Bのループトレースができ、スタック/キュー/リストを図で説明できる。<br>・<b>7/29（3日前）</b> 第2章① 集合と論理演算・論理回路<br>&nbsp;&nbsp;→ 確認：ベン図とXOR・ドモルガンの法則を説明でき、基本的な真理値表が書ける。</div>
+   </div>
+   <div class="bk" id="b5_2">
+     <div class="bkt"><label for="c5_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：手続き・関数・引数・戻り値</span><em>70分</em><button type="button" class="tm" data-for="c5_2" data-min="70" aria-label="70分のタイマーを開始">70分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/watch?v=2v8S2fXrWn0">06. アルゴリズム練習_問題が解けるようになる</a>（問題が解けるようになる）を見てから、関数呼び出しを含む問題3問。「呼び出し元に何が返るか」を追えるように。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=1019s">問5 関数呼出（2分）</a>（関数呼出）。<br>加えて今週やった問題を全部もう一度解き直す。</div>
+   </div>
+   <div class="bk" id="b5_3">
+     <div class="bkt"><label for="c5_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：探索・整列・計算量</span><em>80分</em><button type="button" class="tm" data-for="c5_3" data-min="80" aria-label="80分のタイマーを開始">80分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0N_ur3Q6o6rIVkyAOmW5xRO">『A試験_アルゴリズムとプログラミング』プレイリスト（全7本）</a>の続き：<a href="https://www.youtube.com/watch?v=oHTq8x5KaOg">03. 計算量とアルゴリズム演習問題</a>・<a href="https://www.youtube.com/watch?v=4GmeviUWilI">04. プログラム実行手順</a>・<a href="https://www.youtube.com/watch?v=Az2KzhOh3iI">05. オブジェクト指向プログラミングとUML</a>・<a href="https://www.youtube.com/watch?v=C7Ef8Lh8eCw">06. オブジェクト指向プログラミングの過去問演習</a>＋<a href="https://www.youtube.com/watch?v=qbyEXz1z94g">07. テスト頻出のアルゴリズムとプログラミング分野総復習</a>（総復習）。<b>03=アルゴリズムの基本・分類（教科書03-02〜03-03）、04=プログラムの性質と種類（03-04〜03-05）、05〜06=オブジェクト指向とUML（教科書12-04を先取り）</b>。ソートは動画を見ながら一緒に手を動かして並べ替える。</div>
+   </div>
+   <div class="bk" id="b5_4">
+     <div class="bkt"><label for="c5_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習＋道場まとめ（アルゴリズム）</span><em>60分</em><button type="button" class="tm" data-for="c5_4" data-min="60" aria-label="60分のタイマーを開始">60分</button></div>
+     <div class="bkx">第3章の章末問題を全問 + <b><a href="https://www.fe-siken.com/fekakomon.php">過去問道場</a>『2. アルゴリズムとプログラミング』だけ残して30問</b>（データ構造＋アルゴリズムの2日分をまとめて）。中分類を1周した後なので全問が範囲内です。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>今日のゴール：</b>第3章を完了。2分探索がO(log n)の理由と、クラス/継承の用語を説明できる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/1<span class="r5_1"> 1済</span><span class="r5_2"> 2済</span><span class="r5_3"> 3済</span><span class="r5_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p6" data-day="6" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/2</span><span class="w2">（日）</span><span class="h">3.9h</span></div>
+  <div class="tdt">第4章① CPU・記憶装置（04-01〜04-03）</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>04-01 CPU（プロセッサ）</span><span>04-02 CPUが処理する流れ</span><span>04-03 さまざまな記憶装置</span><span>22-02 [科目B]試験対策① アルゴリズムとプログラミング</span></div>
+  <input type="checkbox" class="tick" id="c6_1"><input type="checkbox" class="tick" id="c6_2"><input type="checkbox" class="tick" id="c6_3"><input type="checkbox" class="tick" id="c6_4">
+   <div class="bk" id="b6_1">
+     <div class="bkt"><label for="c6_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>15分</em><button type="button" class="tm" data-for="c6_1" data-min="15" aria-label="15分のタイマーを開始">15分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/1（1日前）</b> 第3章 03-02〜03-05 ＋ 第12章 12-04 オブジェクト指向<br>&nbsp;&nbsp;→ 確認：第3章を完了。2分探索がO(log n)の理由と、クラス/継承の用語を説明できる。<br>・<b>7/30（3日前）</b> 第2章② 逆ポーランド記法・オートマトン・AI<br>&nbsp;&nbsp;→ 確認：第2章を完了。AIの用語を区別でき、捨てる問題も見極められる。</div>
+   </div>
+   <div class="bk" id="b6_2">
+     <div class="bkt"><label for="c6_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：第22章の基本問題5問</span><em>70分</em><button type="button" class="tm" data-for="c6_2" data-min="70" aria-label="70分のタイマーを開始">70分</button></div>
+     <div class="bkx">先に<a href="https://www.youtube.com/watch?v=Umbh49SwqFA">07. B試験アルゴリズムの記述形式</a>（B試験の記述形式）で答案の形を確認→第22章の基本問題5問（1問7分でOK）。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=1164s">問6 ビット値の操作（6分）</a>（ビット値の操作）。<br>解けなかった問題は答えを見てから、もう一度自力でトレースし直す。</div>
+   </div>
+   <div class="bk" id="b6_3">
+     <div class="bkt"><label for="c6_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：CPU・記憶装置・アドレス指定方式</span><em>102分</em><button type="button" class="tm" data-for="c6_3" data-min="102" aria-label="102分のタイマーを開始">102分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0OBuVgxZNqYB_lIb4u4IkEA">『A試験_ハードウェア』プレイリスト（全13本）</a>を<b>01から10まで</b>：<a href="https://www.youtube.com/watch?v=dyDRuPZkjcw">01. 五大装置とノイマン型コンピューター</a>・<a href="https://www.youtube.com/watch?v=AxOHwWqLMqg">02. CPUと命令実行手順</a>・<a href="https://www.youtube.com/watch?v=qCYXgbMzhLA">03. アドレス指定方式</a>・<a href="https://www.youtube.com/watch?v=wd1NyLs9LHw">04. CPUの性能指標</a>・<a href="https://www.youtube.com/watch?v=Kh8s7wI6kzs">05. CPUの高速化</a>（教科書04-01〜04-02 CPU）＋<a href="https://www.youtube.com/watch?v=qpgxVJo03Cg">06. メモリの分類</a>・<a href="https://www.youtube.com/watch?v=boW3Qf1TWrk">07. メモリの高速化</a>・<a href="https://www.youtube.com/watch?v=syftnE0RmSw">08. ハードディスクの構造と記憶容量</a>・<a href="https://www.youtube.com/watch?v=Rj1GhQpoR4o">09. ハードディスクの頻出分野</a>・<a href="https://www.youtube.com/watch?v=sZuLsfpSBaE">10. その他補助記憶装置</a>（教科書04-03 さまざまな記憶装置）。キャッシュ・RAID・記憶階層はここで一気に。</div>
+   </div>
+   <div class="bk" id="b6_4">
+     <div class="bkt"><label for="c6_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">計算問題を重点演習</span><em>45分</em><button type="button" class="tm" data-for="c6_4" data-min="45" aria-label="45分のタイマーを開始">45分</button></div>
+     <div class="bkx">実効アクセス時間・MIPS・クロック周波数の計算を<b>手で5回</b>。過去問道場『3. コンピュータ構成要素』だけ残し20問。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>実効アクセス時間・MIPSの式を見ずに立てられる。毎回出る得点源。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/2<span class="r6_1"> 1済</span><span class="r6_2"> 2済</span><span class="r6_3"> 3済</span><span class="r6_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p7" data-day="7" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/3</span><span class="w2">（月）</span><span class="h">2.0h</span></div>
+  <div class="tdt">第5章 システムの構成要素（05-01〜05-04）</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>05-01 「処理の仕方」によるシステムの分類</span><span>05-02 「システム構成」によるシステムの分類</span><span>05-03 システムの性能指標</span><span>05-04 システムの信頼性指標</span></div>
+  <input type="checkbox" class="tick" id="c7_1"><input type="checkbox" class="tick" id="c7_2"><input type="checkbox" class="tick" id="c7_3"><input type="checkbox" class="tick" id="c7_4">
+   <div class="bk" id="b7_1">
+     <div class="bkt"><label for="c7_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c7_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/2（1日前）</b> 第4章① CPU・記憶装置（04-01〜04-03）<br>&nbsp;&nbsp;→ 確認：実効アクセス時間・MIPSの式を見ずに立てられる。毎回出る得点源。<br>・<b>7/31（3日前）</b> キャッチアップ ＋ 第3章 03-01 データ構造<br>&nbsp;&nbsp;→ 確認：科目Bのループトレースができ、スタック/キュー/リストを図で説明できる。</div>
+   </div>
+   <div class="bk" id="b7_2">
+     <div class="bkt"><label for="c7_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：2次元配列・多重ループ</span><em>40分</em><button type="button" class="tm" data-for="c7_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">2次元配列・多重ループを2問。ループの内側と外側で変数がどう動くかを表で追う。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=2241s">問10 配列操作（4分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=2493s">問11 配列操作（3分）</a>（配列操作）。</div>
+   </div>
+   <div class="bk" id="b7_3">
+     <div class="bkt"><label for="c7_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：システム構成・性能評価</span><em>50分</em><button type="button" class="tm" data-for="c7_3" data-min="50" aria-label="50分のタイマーを開始">50分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0NgOQ2ACx-R-gDa6PmKC37_">『A試験_システム構成要素』プレイリスト（全4本）</a>を<b>全4本通しで</b>：<a href="https://www.youtube.com/watch?v=hXU9Mn0tMeI">01. システムの構成</a>・<a href="https://www.youtube.com/watch?v=BLoZd-w4YR0">02. システムの信頼性と性能評価</a>・<a href="https://www.youtube.com/watch?v=mUimTShkB3s">03. 稼働率等の性能評価指標過去問演習</a>・<a href="https://www.youtube.com/watch?v=2h2Zbxrr5xQ">04. システム構成分野総復習</a>。03が稼働率の過去問演習なので特に重要。</div>
+   </div>
+   <div class="bk" id="b7_4">
+     <div class="bkt"><label for="c7_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>20分</em><button type="button" class="tm" data-for="c7_4" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">稼働率の計算を手で5問（直列 a×b／並列 1−(1−a)(1−b)）。<a href="https://www.fe-siken.com/fekakomon.php">過去問道場</a>『4. システム構成要素』だけ残し10問。<b>05-03 性能指標</b>（スループット・レスポンスタイム・ベンチマーク）と<b>05-04 信頼性指標</b>（MTBF・MTTR・稼働率）が今日の得点源です。※待ち行列（M/M/1）は教科書では20-03 OR・IE に載っているので、8/13に扱います。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>直列 a×b、並列 1−(1−a)(1−b) を即座に使える。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/3<span class="r7_1"> 1済</span><span class="r7_2"> 2済</span><span class="r7_3"> 3済</span><span class="r7_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p8" data-day="8" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/4</span><span class="w2">（火）</span><span class="h">2.1h</span></div>
+  <div class="tdt">第6章 ソフトウェア（06-01〜06-05）</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>06-01 オペレーティングシステム</span><span>06-02 データ管理とファイルシステム</span><span>06-03 バックアップ</span><span>06-04 開発ツール</span><span>06-05 オープンソースソフトウェア</span></div>
+  <input type="checkbox" class="tick" id="c8_1"><input type="checkbox" class="tick" id="c8_2"><input type="checkbox" class="tick" id="c8_3"><input type="checkbox" class="tick" id="c8_4">
+   <div class="bk" id="b8_1">
+     <div class="bkt"><label for="c8_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c8_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/3（1日前）</b> 第5章 システムの構成要素（05-01〜05-04）<br>&nbsp;&nbsp;→ 確認：直列 a×b、並列 1−(1−a)(1−b) を即座に使える。<br>・<b>8/1（3日前）</b> 第3章 03-02〜03-05 ＋ 第12章 12-04 オブジェクト指向<br>&nbsp;&nbsp;→ 確認：第3章を完了。2分探索がO(log n)の理由と、クラス/継承の用語を説明できる。<br>・<b>7/28（1週間前）</b> 第1章 基礎理論①（データの単位〜2進数の四則演算）<br>&nbsp;&nbsp;→ 確認：10進↔2進↔16進の変換と負の2進数（補数）を、電卓なしで即答できる。</div>
+   </div>
+   <div class="bk" id="b8_2">
+     <div class="bkt"><label for="c8_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：第22章の基本問題3問</span><em>40分</em><button type="button" class="tm" data-for="c8_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">第22章の基本問題3問（1問6分を意識）。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=2663s">問12 条件分岐(if文)（3分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=2829s">問13 条件分岐(if文)（2分）</a>（条件分岐）。</div>
+   </div>
+   <div class="bk" id="b8_3">
+     <div class="bkt"><label for="c8_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：OS・プロセス管理・記憶管理</span><em>56分</em><button type="button" class="tm" data-for="c8_3" data-min="56" aria-label="56分のタイマーを開始">56分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0MT-ayED94r_pvXBvwsXc-9">『A試験_ソフトウェア』プレイリスト（全7本）</a>から：<a href="https://www.youtube.com/watch?v=wSvuZUj18u8">01. 基本ソフトウェア（OS）</a>・<a href="https://www.youtube.com/watch?v=CPCZ8hgtPl0">02. ジョブ管理とタスク管理</a>・<a href="https://www.youtube.com/watch?v=tsnMYL6zpgQ">03. 実記憶管理</a>・<a href="https://www.youtube.com/watch?v=PGuazKoOnTo">04. 仮想記憶管理</a>・<a href="https://www.youtube.com/watch?v=RxseNe2DGDI">05. ファイル管理</a>＋<a href="https://www.youtube.com/watch?v=PFnbtp0tgNc">07. 試験頻出のソフトウェア分野まとめ</a>（まとめ）。<b>06マルチメディアは教科書第8章なので明日8/5に回します。</b><br><b>動画が無い項目</b>：06-03バックアップ（フル/差分/増分の違い）・06-04開発ツール・06-05オープンソースソフトウェア（OSSのライセンス種別）は教科書で。いずれも暗記量が少なく、用語と意味の対応だけでOK。</div>
+   </div>
+   <div class="bk" id="b8_4">
+     <div class="bkt"><label for="c8_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>20分</em><button type="button" class="tm" data-for="c8_4" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">章末問題 + 過去問道場『5. ソフトウェア』だけ残し10問。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>ページング・LRU・スラッシングを説明でき、OSSとバックアップ方式も答えられる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/4<span class="r8_1"> 1済</span><span class="r8_2"> 2済</span><span class="r8_3"> 3済</span><span class="r8_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p9" data-day="9" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/5</span><span class="w2">（水）</span><span class="h">2.5h</span></div>
+  <div class="tdt">第4章② 入出力 ＋ 第7章 ハードウェア ＋ 第8章 UI/マルチメディア</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>04-04 入出力インタフェース</span><span>04-05 入出力装置</span><span>07-01 半導体メモリ</span><span>07-02 電子回路</span><span>08-01 ユーザーインタフェース技術</span><span>08-02 ユーザーインタフェース設計</span><span>08-03 マルチメディア技術</span></div>
+  <input type="checkbox" class="tick" id="c9_1"><input type="checkbox" class="tick" id="c9_2"><input type="checkbox" class="tick" id="c9_3"><input type="checkbox" class="tick" id="c9_4">
+   <div class="bk" id="b9_1">
+     <div class="bkt"><label for="c9_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c9_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/4（1日前）</b> 第6章 ソフトウェア（06-01〜06-05）<br>&nbsp;&nbsp;→ 確認：ページング・LRU・スラッシングを説明でき、OSSとバックアップ方式も答えられる。<br>・<b>8/2（3日前）</b> 第4章① CPU・記憶装置（04-01〜04-03）<br>&nbsp;&nbsp;→ 確認：実効アクセス時間・MIPSの式を見ずに立てられる。毎回出る得点源。<br>・<b>7/29（1週間前）</b> 第2章① 集合と論理演算・論理回路<br>&nbsp;&nbsp;→ 確認：ベン図とXOR・ドモルガンの法則を説明でき、基本的な真理値表が書ける。</div>
+   </div>
+   <div class="bk" id="b9_2">
+     <div class="bkt"><label for="c9_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：文字列処理</span><em>40分</em><button type="button" class="tm" data-for="c9_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">文字列を1文字ずつ走査する定番パターンに慣れる（2問）。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=3279s">問16 文字コード（4分）</a>（文字コード）。</div>
+   </div>
+   <div class="bk" id="b9_3">
+     <div class="bkt"><label for="c9_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：論理回路 ＋ ハードウェアまとめ</span><em>79分</em><button type="button" class="tm" data-for="c9_3" data-min="79" aria-label="79分のタイマーを開始">79分</button></div>
+     <div class="bkx">3章分をまとめて処理します。<br><b>第4章② 入出力（04-04〜04-05）</b>：<a href="https://www.youtube.com/watch?v=15rW32pyE78">11. 代表的な入出力装置</a>・<a href="https://www.youtube.com/watch?v=6_HhKAE_PD0">12. 入出力インターフェース</a>＋<a href="https://www.youtube.com/watch?v=lEABme7UmWQ">13. テスト頻出ハードウェア分野まとめ</a>（第4章の総まとめ）。<br><b>第7章 07-02 電子回路</b>：<a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0M7Xmflm0OXsAGxJ7my3YA_">『A試験_A/D変換』プレイリスト（全3本）</a>の<a href="https://www.youtube.com/watch?v=Tu2LpM84gsA">01. アナログデータとデジタルデータ</a>・<a href="https://www.youtube.com/watch?v=HqN-1W6iXiQ">02. PCM変換と画像データの変換</a>・<a href="https://www.youtube.com/watch?v=lo62w-7wRT0">03. 機器の制御とD/A変換</a>（アナログ/デジタル・PCM・D/A変換）。<br><b>第8章 UI/マルチメディア（08-01〜08-03）</b>：UIは<a href="https://www.youtube.com/watch?v=5L_R1UVb95I">03. 業務モデリングとユーザーインターフェース</a>、マルチメディアは<a href="https://www.youtube.com/watch?v=XsJPQrwpBeI">06. マルチメディアの学習</a>（どちらも別プレイリスト）。多段の回路図問題は飛ばしてよい。<!--REF--><br><small>※すでに見た回で足りる項目（見返すのは詰まった時だけ）：07-01 半導体メモリ → 8/2の<a href="https://www.youtube.com/watch?v=qpgxVJo03Cg">06. メモリの分類</a>／02-02 論理回路 → 7/29の<a href="https://www.youtube.com/watch?v=fg7516VNJ_g">08. 半加算器と全加算器</a></small></div>
+   </div>
+   <div class="bk" id="b9_4">
+     <div class="bkt"><label for="c9_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>20分</em><button type="button" class="tm" data-for="c9_4" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">過去問道場で『6. ハードウェア』『7. ユーザーインタフェース』『8. 情報メディア』を各5問（サイトのカテゴリ名は教科書の章タイトルと少し違うので注意）。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>3章分をまとめて処理。半導体メモリの分類とUI設計の用語が答えられる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/5<span class="r9_1"> 1済</span><span class="r9_2"> 2済</span><span class="r9_3"> 3済</span><span class="r9_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p10" data-day="10" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/6</span><span class="w2">（木）</span><span class="h">2.1h</span></div>
+  <div class="tdt">第9章① データベース（09-01〜09-03 設計・正規化）</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>09-01 データベースの基本</span><span>09-02 関係データベース</span><span>09-03 データベース設計</span></div>
+  <input type="checkbox" class="tick" id="c10_1"><input type="checkbox" class="tick" id="c10_2"><input type="checkbox" class="tick" id="c10_3"><input type="checkbox" class="tick" id="c10_4">
+   <div class="bk" id="b10_1">
+     <div class="bkt"><label for="c10_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c10_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/5（1日前）</b> 第4章② 入出力 ＋ 第7章 ハードウェア ＋ 第8章 UI/マルチメディア<br>&nbsp;&nbsp;→ 確認：3章分をまとめて処理。半導体メモリの分類とUI設計の用語が答えられる。<br>・<b>8/3（3日前）</b> 第5章 システムの構成要素（05-01〜05-04）<br>&nbsp;&nbsp;→ 確認：直列 a×b、並列 1−(1−a)(1−b) を即座に使える。<br>・<b>7/30（1週間前）</b> 第2章② 逆ポーランド記法・オートマトン・AI<br>&nbsp;&nbsp;→ 確認：第2章を完了。AIの用語を区別でき、捨てる問題も見極められる。</div>
+   </div>
+   <div class="bk" id="b10_2">
+     <div class="bkt"><label for="c10_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：探索アルゴリズム</span><em>40分</em><button type="button" class="tm" data-for="c10_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">線形探索・2分探索の擬似言語を2問。第3章で学んだ内容がコードでどう書かれるかを確認。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=2971s">問14 配列操作（2分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=3102s">問15 確率（3分）</a>（配列操作・確率）。</div>
+   </div>
+   <div class="bk" id="b10_3">
+     <div class="bkt"><label for="c10_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：E-R図・正規化</span><em>31分</em><button type="button" class="tm" data-for="c10_3" data-min="31" aria-label="31分のタイマーを開始">31分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0MWx90JSNNg-TuDYQcY7YCP">『A試験_データベース』プレイリスト（全9本）</a>を01から：<a href="https://www.youtube.com/watch?v=lhUsi6TUQy0">01. データベースの基本</a>・<a href="https://www.youtube.com/watch?v=jR2tc_x44WI">02. データベースの正規化(1)</a>・<a href="https://www.youtube.com/watch?v=LDA3gdtmLYg">03. データベースの正規化(2)</a>（教科書09-01 基本・09-02 関係データベース・09-03 設計）。動画内の正規化の分解手順をそのまま真似して1つ自分でもやってみる。</div>
+   </div>
+   <div class="bk" id="b10_4">
+     <div class="bkt"><label for="c10_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習（章末問題のみ）</span><em>45分</em><button type="button" class="tm" data-for="c10_4" data-min="45" aria-label="45分のタイマーを開始">45分</button></div>
+     <div class="bkx">章末問題を解く。<b>道場はまだ使わない</b>：「9. データベース」にはSQL・トランザクションも含まれるため、<b>明日8/7にまとめて</b>やります。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>第3正規形まで自力で分解できる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/6<span class="r10_1"> 1済</span><span class="r10_2"> 2済</span><span class="r10_3"> 3済</span><span class="r10_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p11" data-day="11" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/7</span><span class="w2">（金）</span><span class="h">2.3h</span></div>
+  <div class="tdt">第9章② データベース（09-04〜09-06 DBMS・排他制御）</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>09-04 データベース管理システム</span><span>09-05 トランザクション管理</span><span>09-06 排他制御</span></div>
+  <input type="checkbox" class="tick" id="c11_1"><input type="checkbox" class="tick" id="c11_2"><input type="checkbox" class="tick" id="c11_3"><input type="checkbox" class="tick" id="c11_4">
+   <div class="bk" id="b11_1">
+     <div class="bkt"><label for="c11_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c11_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/6（1日前）</b> 第9章① データベース（09-01〜09-03 設計・正規化）<br>&nbsp;&nbsp;→ 確認：第3正規形まで自力で分解できる。<br>・<b>8/4（3日前）</b> 第6章 ソフトウェア（06-01〜06-05）<br>&nbsp;&nbsp;→ 確認：ページング・LRU・スラッシングを説明でき、OSSとバックアップ方式も答えられる。<br>・<b>7/31（1週間前）</b> キャッチアップ ＋ 第3章 03-01 データ構造<br>&nbsp;&nbsp;→ 確認：科目Bのループトレースができ、スタック/キュー/リストを図で説明できる。</div>
+   </div>
+   <div class="bk" id="b11_2">
+     <div class="bkt"><label for="c11_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：リスト構造（ポインタ操作）</span><em>40分</em><button type="button" class="tm" data-for="c11_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx"><b>科目B最頻出かつ最難関</b>。ノードの図を描いて矢印を付け替えながら追う（2問）。1回で分からなくて普通。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=1817s">問8 優先度付きキュー（3分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=1979s">問9 二分木（4分）</a>（優先度付きキュー・二分木）。この2問はリスト/木構造の典型なので、解けるようになると本番で大きい。</div>
+   </div>
+   <div class="bk" id="b11_3">
+     <div class="bkt"><label for="c11_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：SQL・トランザクション</span><em>59分</em><button type="button" class="tm" data-for="c11_3" data-min="59" aria-label="59分のタイマーを開始">59分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0MWx90JSNNg-TuDYQcY7YCP">『A試験_データベース』プレイリスト（全9本）</a>の続き：<a href="https://www.youtube.com/watch?v=qr6dB47WagI">04. トランザクション処理</a>・<a href="https://www.youtube.com/watch?v=9lNKD49SN_0">05. データの復元方法</a>・<a href="https://www.youtube.com/watch?v=zhWqNC5q50E">06. 関係演算とSQL</a>・<a href="https://www.youtube.com/watch?v=h173le4s4HI">07. SQL文法（SELECT文）</a>＋<a href="https://www.youtube.com/watch?v=EXnq-eFGofE">09. テスト頻出のデータベース分野復習</a>（まとめ）。</div>
+   </div>
+   <div class="bk" id="b11_4">
+     <div class="bkt"><label for="c11_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">道場まとめ（データベース）</span><em>30分</em><button type="button" class="tm" data-for="c11_4" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     <div class="bkx"><b><a href="https://www.fe-siken.com/fekakomon.php">過去問道場</a>『9. データベース』だけ残して25問</b>（設計・正規化＋SQL・トランザクションの2日分をまとめて）。SQL問題は間違えたら必ず解説を読む。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>第9章を完了。GROUP BY + HAVING の結果を読め、デッドロックを説明できる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/7<span class="r11_1"> 1済</span><span class="r11_2"> 2済</span><span class="r11_3"> 3済</span><span class="r11_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p12" data-day="12" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/8</span><span class="w2">（土）</span><span class="h">3.5h</span></div>
+  <div class="tdt">第10章 ネットワーク（10-01〜10-08）</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>10-01 回線</span><span>10-02 LANとWAN</span><span>10-03 IPアドレス</span><span>10-04 サブネットマスク</span><span>10-05 グローバルIPアドレスとプライベートIPアドレス</span><span>10-06 ドメイン名</span><span>10-07 通信プロトコル</span><span>10-08 インターネット応用</span></div>
+  <input type="checkbox" class="tick" id="c12_1"><input type="checkbox" class="tick" id="c12_2"><input type="checkbox" class="tick" id="c12_3"><input type="checkbox" class="tick" id="c12_4">
+   <div class="bk" id="b12_1">
+     <div class="bkt"><label for="c12_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>15分</em><button type="button" class="tm" data-for="c12_1" data-min="15" aria-label="15分のタイマーを開始">15分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/7（1日前）</b> 第9章② データベース（09-04〜09-06 DBMS・排他制御）<br>&nbsp;&nbsp;→ 確認：第9章を完了。GROUP BY + HAVING の結果を読め、デッドロックを説明できる。<br>・<b>8/5（3日前）</b> 第4章② 入出力 ＋ 第7章 ハードウェア ＋ 第8章 UI/マルチメディア<br>&nbsp;&nbsp;→ 確認：3章分をまとめて処理。半導体メモリの分類とUI設計の用語が答えられる。<br>・<b>8/1（1週間前）</b> 第3章 03-02〜03-05 ＋ 第12章 12-04 オブジェクト指向<br>&nbsp;&nbsp;→ 確認：第3章を完了。2分探索がO(log n)の理由と、クラス/継承の用語を説明できる。</div>
+   </div>
+   <div class="bk" id="b12_2">
+     <div class="bkt"><label for="c12_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：整列アルゴリズム + 再帰</span><em>70分</em><button type="button" class="tm" data-for="c12_2" data-min="70" aria-label="70分のタイマーを開始">70分</button></div>
+     <div class="bkx">ソートの擬似言語2問＋<a href="https://www.youtube.com/watch?v=8c2bIm8v568">05. アルゴリズム練習_再帰処理を学ぶ</a>（再帰処理）を見てから再帰関数1問。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=1536s">問7 関数の再帰呼出（5分）</a>（関数の再帰呼出）。再帰は「呼び出しの階層」を紙に書いて追う。</div>
+   </div>
+   <div class="bk" id="b12_3">
+     <div class="bkt"><label for="c12_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：TCP/IP・サブネット計算</span><em>80分</em><button type="button" class="tm" data-for="c12_3" data-min="80" aria-label="80分のタイマーを開始">80分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0Nb6K99biC17XPfrkEBHn_s">『A試験_ネットワーク』プレイリスト（全6本）</a>を<b>全6本通しで</b>：<a href="https://www.youtube.com/watch?v=edNtArZcCiA">01. ネットワークの基本と回線速度</a>・<a href="https://www.youtube.com/watch?v=o2TqCYxj-YA">02. OSI基本参照モデルを理解する</a>・<a href="https://www.youtube.com/watch?v=LNcqBWTJqBw">03. TCP/IPモデルとIPアドレス</a>・<a href="https://www.youtube.com/watch?v=xB8g3V_P9Lo">04. IPアドレスとサブネットマスク</a>・<a href="https://www.youtube.com/watch?v=kClkP5J97PQ">05. 誤り制御と重要用語の確認</a>・<a href="https://www.youtube.com/watch?v=1AkfF7mMgw8">06. テスト頻出のネットワーク分野復習</a>。<b>サブネット計算は04</b>が本命。</div>
+   </div>
+   <div class="bk" id="b12_4">
+     <div class="bkt"><label for="c12_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">サブネット計算を集中演習</span><em>45分</em><button type="button" class="tm" data-for="c12_4" data-min="45" aria-label="45分のタイマーを開始">45分</button></div>
+     <div class="bkx">サブネット計算を手で10問。過去問道場『10. ネットワーク』だけ残し20問。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>CIDR表記からホスト数・ネットワークアドレスを即算出できる。毎回出る。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/8<span class="r12_1"> 1済</span><span class="r12_2"> 2済</span><span class="r12_3"> 3済</span><span class="r12_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p13" data-day="13" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/9</span><span class="w2">（日）</span><span class="h">3.9h</span></div>
+  <div class="tdt">第11章 情報セキュリティ（11-01〜11-06）＋ 第22章 22-03</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>11-01 情報セキュリティの脅威</span><span>11-02 暗号技術の基本</span><span>11-03 デジタル署名と認証局</span><span>11-04 リスクマネジメント</span><span>11-05 情報セキュリティマネジメント</span><span>11-06 脅威への対策</span><span>22-03 [科目B]試験対策② 情報セキュリティ</span></div>
+  <input type="checkbox" class="tick" id="c13_1"><input type="checkbox" class="tick" id="c13_2"><input type="checkbox" class="tick" id="c13_3"><input type="checkbox" class="tick" id="c13_4">
+   <div class="bk" id="b13_1">
+     <div class="bkt"><label for="c13_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>15分</em><button type="button" class="tm" data-for="c13_1" data-min="15" aria-label="15分のタイマーを開始">15分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/8（1日前）</b> 第10章 ネットワーク（10-01〜10-08）<br>&nbsp;&nbsp;→ 確認：CIDR表記からホスト数・ネットワークアドレスを即算出できる。毎回出る。<br>・<b>8/6（3日前）</b> 第9章① データベース（09-01〜09-03 設計・正規化）<br>&nbsp;&nbsp;→ 確認：第3正規形まで自力で分解できる。<br>・<b>8/2（1週間前）</b> 第4章① CPU・記憶装置（04-01〜04-03）<br>&nbsp;&nbsp;→ 確認：実効アクセス時間・MIPSの式を見ずに立てられる。毎回出る得点源。</div>
+   </div>
+   <div class="bk" id="b13_2">
+     <div class="bkt"><label for="c13_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：情報セキュリティ分野 4問</span><em>70分</em><button type="button" class="tm" data-for="c13_2" data-min="70" aria-label="70分のタイマーを開始">70分</button></div>
+     <div class="bkx">第22章のセキュリティ問題4問。ここは配点20%の得点源で、今日の第11章の知識でそのまま解けます。<br><b>公式問題で確認</b>：<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=3543s">問17 セキュリティ①（6分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=3927s">問18 セキュリティ②（6分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=4270s">問19 セキュリティ③（4分）</a>・<a href="https://www.youtube.com/watch?v=9fU2HlAXTiM&t=4503s">問20 セキュリティ④（6分）</a>（セキュリティ①〜④＝公式サンプルのセキュリティ全4問）。加えて<a href="https://www.youtube.com/watch?v=GER6GGC47Zs">08. B試験問題の解説</a>（すーさんのB試験解説）。</div>
+   </div>
+   <div class="bk" id="b13_3">
+     <div class="bkt"><label for="c13_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：情報セキュリティ</span><em>104分</em><button type="button" class="tm" data-for="c13_3" data-min="104" aria-label="104分のタイマーを開始">104分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0M4ds9ASg0Bg2iAwsEZi8Yk">『A/B試験_情報セキュリティ』プレイリスト（全8本）</a>を<b>01から08まで全部</b>：<a href="https://www.youtube.com/watch?v=cfON3-kWCuM">01. 情報セキュリティの考え方</a>・<a href="https://www.youtube.com/watch?v=Aq2vmYV_0Dk">02. サイバー攻撃とコンピューターウィルス</a>・<a href="https://www.youtube.com/watch?v=cRf1B9lsl8o">03. サイバー攻撃の過去問演習</a>・<a href="https://www.youtube.com/watch?v=lT7vLRBwxrY">04. デジタル署名と暗号化</a>・<a href="https://www.youtube.com/watch?v=Hjz_UK2WoO8">05. ネットワークセキュリティ</a>・<a href="https://www.youtube.com/watch?v=NCaxoMKV1tM">06. ネットワーク・セキュリティ過去問演習</a>・<a href="https://www.youtube.com/watch?v=XG8WEourY5E">07. テスト頻出の情報セキュリティ分野復習</a>。この計画で一番丁寧に見る章です。04（デジタル署名と暗号化）は繰り返し見る。</div>
+   </div>
+   <div class="bk" id="b13_4">
+     <div class="bkt"><label for="c13_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>45分</em><button type="button" class="tm" data-for="c13_4" data-min="45" aria-label="45分のタイマーを開始">45分</button></div>
+     <div class="bkx">章末問題を全問 + 過去問道場で『11. セキュリティ』だけ残し25問（サイトでの名称は『セキュリティ』で、教科書の章タイトル『情報セキュリティ』とは表記が少し違います）。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>公開鍵暗号とデジタル署名で「どちらの鍵を使うか」を混同せずに答えられる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/9<span class="r13_1"> 1済</span><span class="r13_2"> 2済</span><span class="r13_3"> 3済</span><span class="r13_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p14" data-day="14" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/10</span><span class="w2">（月）</span><span class="h">2.3h</span></div>
+  <div class="tdt">第12章 システム開発（12-01〜12-03・12-05）＋ 第13章</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>12-01 システム開発技術</span><span>12-02 システム要件定義</span><span>12-03 システム設計</span><span>12-05 テスト</span><span>13-01 ソフトウェアの開発モデル</span></div>
+  <input type="checkbox" class="tick" id="c14_1"><input type="checkbox" class="tick" id="c14_2"><input type="checkbox" class="tick" id="c14_3"><input type="checkbox" class="tick" id="c14_4">
+   <div class="bk" id="b14_1">
+     <div class="bkt"><label for="c14_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c14_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/9（1日前）</b> 第11章 情報セキュリティ（11-01〜11-06）＋ 第22章 22-03<br>&nbsp;&nbsp;→ 確認：公開鍵暗号とデジタル署名で「どちらの鍵を使うか」を混同せずに答えられる。<br>・<b>8/7（3日前）</b> 第9章② データベース（09-04〜09-06 DBMS・排他制御）<br>&nbsp;&nbsp;→ 確認：第9章を完了。GROUP BY + HAVING の結果を読め、デッドロックを説明できる。<br>・<b>8/3（1週間前）</b> 第5章 システムの構成要素（05-01〜05-04）<br>&nbsp;&nbsp;→ 確認：直列 a×b、並列 1−(1−a)(1−b) を即座に使える。</div>
+   </div>
+   <div class="bk" id="b14_2">
+     <div class="bkt"><label for="c14_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：本番形式で2問（時間計測）</span><em>40分</em><button type="button" class="tm" data-for="c14_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/watch?v=mwgbN5vZuY4">08. オブジェクト指向プログラミングを学ぶ</a>（オブジェクト指向）を見てから本番形式で2問（1問5分）。タイマーは止めない。<!--REF--><br><small>※任意教材：<a href="https://www.youtube.com/watch?v=adjCffDTWnE">【問題演習付き】科目Bオブジェクト指向完全攻略</a>（109分）。オブジェクト指向が苦手なら倍速で該当箇所だけ。</small></div>
+   </div>
+   <div class="bk" id="b14_3">
+     <div class="bkt"><label for="c14_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：要件定義・テスト技法・開発手法</span><em>69分</em><button type="button" class="tm" data-for="c14_3" data-min="69" aria-label="69分のタイマーを開始">69分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0PwCXllhQvU3gXP4gkdAhwG">『A試験_システム開発』プレイリスト（全6本）</a>から：<a href="https://www.youtube.com/watch?v=pWlHHH5wk24">01. システム開発の流れ</a>・<a href="https://www.youtube.com/watch?v=Du79L8TQx1U">02. システム開発手法（アジャイル・ウォーターフォール等）</a>・<a href="https://www.youtube.com/watch?v=7cj3yFa7k4s">04. モジュール分割を理解する</a>・<a href="https://www.youtube.com/watch?v=tWxkIRgNk90">05. テスト手法を理解する</a>＋<a href="https://www.youtube.com/watch?v=5jrRRFB7ShI">06. システム開発の総まとめ</a>（まとめ）。<b>テスト技法は05が本命</b>（教科書12-05：同値分割・限界値分析・ブラックボックス/ホワイトボックス）。03（業務モデリングとUI）は8/5で視聴済み、12-04 オブジェクト指向は8/1で視聴済みなので今日は不要。13-01 開発モデル（ウォーターフォール/アジャイル/スパイラル）は02に入っています。</div>
+   </div>
+   <div class="bk" id="b14_4">
+     <div class="bkt"><label for="c14_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>20分</em><button type="button" class="tm" data-for="c14_4" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">過去問道場で『12. システム開発技術』『13. ソフトウェア開発管理技術』を各10問。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>テスト技法（同値分割・限界値分析）と開発モデルを押さえる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/10<span class="r14_1"> 1済</span><span class="r14_2"> 2済</span><span class="r14_3"> 3済</span><span class="r14_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p15" data-day="15" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/11</span><span class="w2">（火・祝）</span><span class="h">3.5h</span></div>
+  <div class="tdt">第14章 PM ＋ 第15章 サービスマネジメント/監査 ＋ 第16章 システム戦略</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>14-01 プロジェクトマネジメント</span><span>14-02 プロジェクトスコープマネジメント</span><span>14-03 プロジェクト資源マネジメント</span><span>14-04 プロジェクトタイムマネジメント</span><span>14-05 プロジェクトコストマネジメント</span><span>14-06 プロジェクトリスクマネジメント</span><span>15-01 サービスマネジメントとシステム移行</span><span>15-02 サービスレベル管理</span><span>15-03 サービスデスク</span><span>15-04 ファシリティマネジメント</span><span>15-05 システム監査</span><span>15-06 内部統制</span><span>16-01 情報システム戦略</span><span>16-02 業務プロセス</span><span>16-03 ソリューションビジネス</span><span>16-04 システムの活用促進と評価</span></div>
+  <input type="checkbox" class="tick" id="c15_1"><input type="checkbox" class="tick" id="c15_2"><input type="checkbox" class="tick" id="c15_3"><input type="checkbox" class="tick" id="c15_4">
+   <div class="bk" id="b15_1">
+     <div class="bkt"><label for="c15_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>15分</em><button type="button" class="tm" data-for="c15_1" data-min="15" aria-label="15分のタイマーを開始">15分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/10（1日前）</b> 第12章 システム開発（12-01〜12-03・12-05）＋ 第13章<br>&nbsp;&nbsp;→ 確認：テスト技法（同値分割・限界値分析）と開発モデルを押さえる。<br>・<b>8/8（3日前）</b> 第10章 ネットワーク（10-01〜10-08）<br>&nbsp;&nbsp;→ 確認：CIDR表記からホスト数・ネットワークアドレスを即算出できる。毎回出る。<br>・<b>8/4（1週間前）</b> 第6章 ソフトウェア（06-01〜06-05）<br>&nbsp;&nbsp;→ 確認：ページング・LRU・スラッシングを説明でき、OSSとバックアップ方式も答えられる。<br>・<b>7/28（2週間前）</b> 第1章 基礎理論①（データの単位〜2進数の四則演算）<br>&nbsp;&nbsp;→ 確認：10進↔2進↔16進の変換と負の2進数（補数）を、電卓なしで即答できる。</div>
+   </div>
+   <div class="bk" id="b15_2">
+     <div class="bkt"><label for="c15_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：4問連続で通し演習（20分）＋復習</span><em>70分</em><button type="button" class="tm" data-for="c15_2" data-min="70" aria-label="70分のタイマーを開始">70分</button></div>
+     <div class="bkx">20分タイマーで4問→終わったら<a href="https://www.youtube.com/watch?v=4k3DX7tNqCY">09. B試験サンプル問題1,2解説</a>（サンプル問題1,2解説）で解き方を確認。<!--REF--><br><small>※<b>今日は祝日で時間が取れるので、ここが最大のチャンス</b>：<a href="https://www.youtube.com/watch?v=-lxUl3J3BXE">【問題演習付き】科目Bアルゴリズムはこう解け</a>（109分・問題演習付き）を倍速＋一時停止で通すと解法の型が一気に増えます。上の演習より優先してもよい。</small></div>
+   </div>
+   <div class="bk" id="b15_3">
+     <div class="bkt"><label for="c15_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：PM・サービスマネジメント・監査・システム戦略</span><em>80分</em><button type="button" class="tm" data-for="c15_3" data-min="80" aria-label="80分のタイマーを開始">80分</button></div>
+     <div class="bkx"><b>マネジメント分野の動画は存在します</b>：<a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0OnGxUKsCRFMIcEl_GJTWW9">『A試験_マネジメント』プレイリスト（全5本）</a>を<b>全5本通しで</b> <a href="https://www.youtube.com/watch?v=xzGeSKi8dDY">01. プロジェクトマネジメントを理解する</a>・<a href="https://www.youtube.com/watch?v=WhtCc6KY-nw">02. コスト管理とスケジュール管理を理解する</a>・<a href="https://www.youtube.com/watch?v=PRNN3goj6Rc">03. ITサービスマネジメントとは</a>・<a href="https://www.youtube.com/watch?v=CNpP-BXz3jg">04. システム監査を完璧に</a>・<a href="https://www.youtube.com/watch?v=iTPcYUkMVfs">05. マネジメント分野の総まとめ</a>。<b>アローダイアグラム・EVMは02（コスト管理とスケジュール管理）</b>、システム監査は04。<br>第16章システム戦略は<a href="https://www.youtube.com/watch?v=m4tY24TUAe0">01. ソリューションビジネスを理解する</a>。</div>
+   </div>
+   <div class="bk" id="b15_4">
+     <div class="bkt"><label for="c15_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>45分</em><button type="button" class="tm" data-for="c15_4" data-min="45" aria-label="45分のタイマーを開始">45分</button></div>
+     <div class="bkx">アローダイアグラムを手で3問 + 過去問道場でグループ『マネジメント系』（14.プロジェクトマネジメント・15.サービスマネジメント・16.システム監査）を15問＋『17. システム戦略』を5問（第16章システム戦略はサイトではストラテジ系に分類されているので別枠）。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>クリティカルパスを自力で求められ、SLA・内部統制の用語も答えられる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/11<span class="r15_1"> 1済</span><span class="r15_2"> 2済</span><span class="r15_3"> 3済</span><span class="r15_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p16" data-day="16" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/12</span><span class="w2">（水）</span><span class="h">2.0h</span></div>
+  <div class="tdt">第17章 システム企画 ＋ 第18章 経営戦略マネジメント</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>17-01 企画と要件定義</span><span>17-02 調達計画・実施</span><span>18-01 経営戦略</span><span>18-02 全社戦略</span><span>18-03 事業戦略</span><span>18-04 事業戦略の目標と評価</span><span>18-05 マーケティングの基本</span><span>18-06 経営管理システム</span></div>
+  <input type="checkbox" class="tick" id="c16_1"><input type="checkbox" class="tick" id="c16_2"><input type="checkbox" class="tick" id="c16_3"><input type="checkbox" class="tick" id="c16_4">
+   <div class="bk" id="b16_1">
+     <div class="bkt"><label for="c16_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c16_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/11（1日前）</b> 第14章 PM ＋ 第15章 サービスマネジメント/監査 ＋ 第16章 システム戦略<br>&nbsp;&nbsp;→ 確認：クリティカルパスを自力で求められ、SLA・内部統制の用語も答えられる。<br>・<b>8/9（3日前）</b> 第11章 情報セキュリティ（11-01〜11-06）＋ 第22章 22-03<br>&nbsp;&nbsp;→ 確認：公開鍵暗号とデジタル署名で「どちらの鍵を使うか」を混同せずに答えられる。<br>・<b>8/5（1週間前）</b> 第4章② 入出力 ＋ 第7章 ハードウェア ＋ 第8章 UI/マルチメディア<br>&nbsp;&nbsp;→ 確認：3章分をまとめて処理。半導体メモリの分類とUI設計の用語が答えられる。<br>・<b>7/29（2週間前）</b> 第2章① 集合と論理演算・論理回路<br>&nbsp;&nbsp;→ 確認：ベン図とXOR・ドモルガンの法則を説明でき、基本的な真理値表が書ける。</div>
+   </div>
+   <div class="bk" id="b16_2">
+     <div class="bkt"><label for="c16_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：2問 + 誤答の再トレース</span><em>40分</em><button type="button" class="tm" data-for="c16_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">新規2問＋これまで間違えた問題から1問を白紙から解き直す。<br>解法の総点検に<a href="https://www.youtube.com/watch?v=oDtA78nwQMM">【2023年版】基本情報技術者試験完全攻略（科目B解説編）</a>（34分）。</div>
+   </div>
+   <div class="bk" id="b16_3">
+     <div class="bkt"><label for="c16_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：調達・経営戦略・マーケティング</span><em>28分</em><button type="button" class="tm" data-for="c16_3" data-min="28" aria-label="28分のタイマーを開始">28分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0OpkM-aZi-oG8gC_dc3sf6w">『A試験_ストラテジ』プレイリスト（全8本）</a>から：<a href="https://www.youtube.com/watch?v=FWBNhZw7Yrg">03. 経営事業戦略とマーケティング</a>・<a href="https://www.youtube.com/watch?v=Dax1-XL6eUw">04. 経営管理と技術開発</a>。調達（RFI/RFP）・SWOT・PPMはここ。用語と意味の紐付けだけでよい。</div>
+   </div>
+   <div class="bk" id="b16_4">
+     <div class="bkt"><label for="c16_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>40分</em><button type="button" class="tm" data-for="c16_4" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">過去問道場で『18. システム企画』7問・『19. 経営戦略マネジメント』8問。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>RFI/RFP、PPMの4象限、バランススコアカードを即答できる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/12<span class="r16_1"> 1済</span><span class="r16_2"> 2済</span><span class="r16_3"> 3済</span><span class="r16_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p17" data-day="17" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/13</span><span class="w2">（木）</span><span class="h">2.0h</span></div>
+  <div class="tdt">第19章 ビジネスインダストリ ＋ 第20章 企業活動（OR・IE含む）</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>19-01 ビジネスシステム</span><span>19-02 エンジニアリングシステム</span><span>19-03 e-ビジネス</span><span>19-04 組込みシステム・IoTシステム</span><span>20-01 企業活動</span><span>20-02 経営組織</span><span>20-03 OR・IE（待ち行列・線形計画法・在庫管理）</span><span>20-04 損益分岐点</span><span>20-05 財務諸表と6つの利益</span><span>20-06 資産管理</span></div>
+  <input type="checkbox" class="tick" id="c17_1"><input type="checkbox" class="tick" id="c17_2"><input type="checkbox" class="tick" id="c17_3"><input type="checkbox" class="tick" id="c17_4">
+   <div class="bk" id="b17_1">
+     <div class="bkt"><label for="c17_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c17_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/12（1日前）</b> 第17章 システム企画 ＋ 第18章 経営戦略マネジメント<br>&nbsp;&nbsp;→ 確認：RFI/RFP、PPMの4象限、バランススコアカードを即答できる。<br>・<b>8/10（3日前）</b> 第12章 システム開発（12-01〜12-03・12-05）＋ 第13章<br>&nbsp;&nbsp;→ 確認：テスト技法（同値分割・限界値分析）と開発モデルを押さえる。<br>・<b>8/6（1週間前）</b> 第9章① データベース（09-01〜09-03 設計・正規化）<br>&nbsp;&nbsp;→ 確認：第3正規形まで自力で分解できる。<br>・<b>7/30（2週間前）</b> 第2章② 逆ポーランド記法・オートマトン・AI<br>&nbsp;&nbsp;→ 確認：第2章を完了。AIの用語を区別でき、捨てる問題も見極められる。</div>
+   </div>
+   <div class="bk" id="b17_2">
+     <div class="bkt"><label for="c17_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：2問（1問5分）</span><em>40分</em><button type="button" class="tm" data-for="c17_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">タイマー必須。5分で解けなかった問題は印をつけて後で再挑戦。</div>
+   </div>
+   <div class="bk" id="b17_3">
+     <div class="bkt"><label for="c17_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：ビジネスインダストリ・企業活動</span><em>50分</em><button type="button" class="tm" data-for="c17_3" data-min="50" aria-label="50分のタイマーを開始">50分</button></div>
+     <div class="bkx"><a href="https://www.youtube.com/playlist?list=PLEuyFWEF8u0OpkM-aZi-oG8gC_dc3sf6w">『A試験_ストラテジ』プレイリスト（全8本）</a>から：<a href="https://www.youtube.com/watch?v=SUJkjNrmBKU">02. ビジネスインダストリを理解する</a>（第19章 ビジネスインダストリ・IoT）／<a href="https://www.youtube.com/watch?v=I6nKIHFYWLM">05. 組織体制と線形計画法</a>（20-02経営組織・20-03 OR・IEの線形計画法）／<b><a href="https://www.youtube.com/watch?v=1TP07xMOkKI">06. 企業の財務会計</a>（20-04損益分岐点・20-05財務諸表・20-06資産管理）</b>。<br><b>20-03 OR・IE には待ち行列（M/M/1）が含まれます</b>——動画に該当回が無いので教科書で。公式は2つだけ：<b>利用率ρ＝到着率÷処理率</b>、<b>平均待ち時間＝ρ/(1−ρ)×平均処理時間</b>。ρ=0.8なら待ち時間は処理時間の4倍という感覚を掴めば十分。損益分岐点は動画の例題をそのまま解く。</div>
+   </div>
+   <div class="bk" id="b17_4">
+     <div class="bkt"><label for="c17_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>20分</em><button type="button" class="tm" data-for="c17_4" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">損益分岐点を手で3問 + 過去問道場で『21. ビジネスインダストリ』6問・『22. 企業活動』9問（企業活動は出題数148問とストラテジ系で最多。厚めに）。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>損益分岐点と待ち行列（M/M/1）の式を即使える。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/13<span class="r17_1"> 1済</span><span class="r17_2"> 2済</span><span class="r17_3"> 3済</span><span class="r17_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p18" data-day="18" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/14</span><span class="w2">（金）</span><span class="h">2.0h</span></div>
+  <div class="tdt">第21章 法務（21-01〜21-04）─ 教科書1周完了</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>21-01 3つの知的財産権</span><span>21-02 産業財産権とその他の権利</span><span>21-03 セキュリティ関連法規</span><span>21-04 労働関連法規と取引関連法規</span></div>
+  <input type="checkbox" class="tick" id="c18_1"><input type="checkbox" class="tick" id="c18_2"><input type="checkbox" class="tick" id="c18_3"><input type="checkbox" class="tick" id="c18_4">
+   <div class="bk" id="b18_1">
+     <div class="bkt"><label for="c18_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">高速復習（忘却曲線）</span><em>10分</em><button type="button" class="tm" data-for="c18_1" data-min="10" aria-label="10分のタイマーを開始">10分</button></div>
+     <div class="bkx"><b>読み直さず「思い出す」だけ</b>。各項目1〜3分で、下のゴールに自分で答えてみる→詰まったところだけ教科書/動画で確認。これを毎日やるので後半でも前半が抜けません。<br>・<b>8/13（1日前）</b> 第19章 ビジネスインダストリ ＋ 第20章 企業活動（OR・IE含む）<br>&nbsp;&nbsp;→ 確認：損益分岐点と待ち行列（M/M/1）の式を即使える。<br>・<b>8/11（3日前）</b> 第14章 PM ＋ 第15章 サービスマネジメント/監査 ＋ 第16章 システム戦略<br>&nbsp;&nbsp;→ 確認：クリティカルパスを自力で求められ、SLA・内部統制の用語も答えられる。<br>・<b>8/7（1週間前）</b> 第9章② データベース（09-04〜09-06 DBMS・排他制御）<br>&nbsp;&nbsp;→ 確認：第9章を完了。GROUP BY + HAVING の結果を読め、デッドロックを説明できる。<br>・<b>7/31（2週間前）</b> キャッチアップ ＋ 第3章 03-01 データ構造<br>&nbsp;&nbsp;→ 確認：科目Bのループトレースができ、スタック/キュー/リストを図で説明できる。</div>
+   </div>
+   <div class="bk" id="b18_2">
+     <div class="bkt"><label for="c18_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目B：2問（1問5分）</span><em>40分</em><button type="button" class="tm" data-for="c18_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">引き続きタイマー。</div>
+   </div>
+   <div class="bk" id="b18_3">
+     <div class="bkt"><label for="c18_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">動画で学ぶ：法務（ITに関わる法律）</span><em>31分</em><button type="button" class="tm" data-for="c18_3" data-min="31" aria-label="31分のタイマーを開始">31分</button></div>
+     <div class="bkx"><b>法務の動画は存在します</b>：<a href="https://www.youtube.com/watch?v=xK8o3vDAK9I">07. ITに関わる法律</a>（ITに関わる法律）。知的財産権・労働関連法規・個人情報保護法はここ。仕上げに<a href="https://www.youtube.com/watch?v=bEANpRVFheM">08. ストラテジ分野の総まとめ</a>（ストラテジ分野の総まとめ）。</div>
+   </div>
+   <div class="bk" id="b18_4">
+     <div class="bkt"><label for="c18_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">演習</span><em>40分</em><button type="button" class="tm" data-for="c18_4" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">過去問道場で『23. 法務』だけ残し15問。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>🎉 教科書全22章を1周完了。知的財産権と労働関連法規を区別できる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/14<span class="r18_1"> 1済</span><span class="r18_2"> 2済</span><span class="r18_3"> 3済</span><span class="r18_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p19" data-day="19" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/15</span><span class="w2">（土）</span><span class="h">3.5h</span></div>
+  <div class="tdt">分野別総復習① テクノロジ系（基礎理論・アルゴリズム・コンピュータ）</div>
+
+  <input type="checkbox" class="tick" id="c19_1"><input type="checkbox" class="tick" id="c19_2"><input type="checkbox" class="tick" id="c19_3">
+   <div class="bk" id="b19_1">
+     <div class="bkt"><label for="c19_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B：擬似言語 4問（20分通し×2セット）</span><em>70分</em><button type="button" class="tm" data-for="c19_1" data-min="70" aria-label="70分のタイマーを開始">70分</button></div>
+     <div class="bkx">本番と同じ5分/問で20分通し×2セット。セット間に<a href="https://www.youtube.com/watch?v=W_y8Mt3WCUk">10. B試験サンプル問題3解説</a>（サンプル問題3解説・17分）を挟む。<br>公式過去問の解き方確認に<a href="https://www.youtube.com/watch?v=0kvNR4HbMm4">【最速】科目B公式過去問を徹底解説</a>（28分）。<!--REF-->行き詰まった時の総ざらい用（任意・3時間42分）：<a href="https://www.youtube.com/watch?v=wFpyeWto8Og">【総集編】アルゴリズム問題をたった1動画で対策</a>。</div>
+   </div>
+   <div class="bk" id="b19_2">
+     <div class="bkt"><label for="c19_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目A 分野別演習（重点：コンピュータ構成要素）</span><em>110分</em><button type="button" class="tm" data-for="c19_2" data-min="110" aria-label="110分のタイマーを開始">110分</button></div>
+     <div class="bkx">過去問道場で『3. コンピュータ構成要素』30問（優先）・『1. 基礎理論』15問・『2. アルゴリズムとプログラミング』15問。<!--REF-->参考（任意）：まとめ回 <a href="https://www.youtube.com/watch?v=lEABme7UmWQ">13. テスト頻出ハードウェア分野まとめ</a>・<a href="https://www.youtube.com/watch?v=qbyEXz1z94g">07. テスト頻出のアルゴリズムとプログラミング分野総復習</a>／総ざらい <a href="https://www.youtube.com/watch?v=oqaBEnhIxk0">【最新版】科目Aを12時間で完璧に理解</a>（12時間あるので倍速の飛ばし見前提）。</div>
+   </div>
+   <div class="bk" id="b19_3">
+     <div class="bkt"><label for="c19_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">誤答ノートを作る</span><em>30分</em><button type="button" class="tm" data-for="c19_3" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     <div class="bkx">間違えた問題を「分野／なぜ間違えたか」の1行だけメモ。8/21以降これを見返す。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>この3分野の正答率70%以上。届かない分野は明日の朝に教科書を再読。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/15<span class="r19_1"> 1済</span><span class="r19_2"> 2済</span><span class="r19_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p20" data-day="20" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/16</span><span class="w2">（日）</span><span class="h">3.5h</span></div>
+  <div class="tdt">分野別総復習② データベース・ネットワーク・セキュリティ</div>
+
+  <input type="checkbox" class="tick" id="c20_1"><input type="checkbox" class="tick" id="c20_2"><input type="checkbox" class="tick" id="c20_3">
+   <div class="bk" id="b20_1">
+     <div class="bkt"><label for="c20_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B：セキュリティ4問 + 擬似言語2問</span><em>70分</em><button type="button" class="tm" data-for="c20_1" data-min="70" aria-label="70分のタイマーを開始">70分</button></div>
+     <div class="bkx">セキュリティ4問は全問正解を狙う。擬似言語2問のあと<a href="https://www.youtube.com/watch?v=BNJjlYJua8k">11. B試験サンプル問題4,5解説</a>（サンプル問題4,5解説）を見る。</div>
+   </div>
+   <div class="bk" id="b20_2">
+     <div class="bkt"><label for="c20_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目A 分野別演習（重点：情報セキュリティ）</span><em>110分</em><button type="button" class="tm" data-for="c20_2" data-min="110" aria-label="110分のタイマーを開始">110分</button></div>
+     <div class="bkx">過去問道場で『11. セキュリティ』35問（他の倍以上）・『9. データベース』15問・『10. ネットワーク』15問。セキュリティは過去8回で64問と全分野トップなのでここへの投資が一番効く。仕上げにまとめ回：<a href="https://www.youtube.com/watch?v=XG8WEourY5E">07. テスト頻出の情報セキュリティ分野復習</a>・<a href="https://www.youtube.com/watch?v=EXnq-eFGofE">09. テスト頻出のデータベース分野復習</a>・<a href="https://www.youtube.com/watch?v=1AkfF7mMgw8">06. テスト頻出のネットワーク分野復習</a>。</div>
+   </div>
+   <div class="bk" id="b20_3">
+     <div class="bkt"><label for="c20_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">誤答ノート更新</span><em>30分</em><button type="button" class="tm" data-for="c20_3" data-min="30" aria-label="30分のタイマーを開始">30分</button></div>
+     
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>セキュリティは正答率85%以上。ここは落とせない。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/16<span class="r20_1"> 1済</span><span class="r20_2"> 2済</span><span class="r20_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p21" data-day="21" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/17</span><span class="w2">（月）</span><span class="h">2.0h</span></div>
+  <div class="tdt">分野別総復習③ 開発技術・マネジメント</div>
+
+  <input type="checkbox" class="tick" id="c21_1"><input type="checkbox" class="tick" id="c21_2"><input type="checkbox" class="tick" id="c21_3">
+   <div class="bk" id="b21_1">
+     <div class="bkt"><label for="c21_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B：2問（5分/問）</span><em>40分</em><button type="button" class="tm" data-for="c21_1" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     
+   </div>
+   <div class="bk" id="b21_2">
+     <div class="bkt"><label for="c21_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目A 分野別演習</span><em>60分</em><button type="button" class="tm" data-for="c21_2" data-min="60" aria-label="60分のタイマーを開始">60分</button></div>
+     <div class="bkx">過去問道場で『12. システム開発技術』10問・『13. ソフトウェア開発管理技術』5問・『14. プロジェクトマネジメント』10問・『15. サービスマネジメント』8問・『16. システム監査』7問（計40問）。仕上げにまとめ回：<a href="https://www.youtube.com/watch?v=5jrRRFB7ShI">06. システム開発の総まとめ</a>・<a href="https://www.youtube.com/watch?v=iTPcYUkMVfs">05. マネジメント分野の総まとめ</a>。</div>
+   </div>
+   <div class="bk" id="b21_3">
+     <div class="bkt"><label for="c21_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">誤答ノート更新＋前日の誤答を解き直し</span><em>20分</em><button type="button" class="tm" data-for="c21_3" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>アローダイアグラム・EVM・SLA を確実に。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/17<span class="r21_1"> 1済</span><span class="r21_2"> 2済</span><span class="r21_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p22" data-day="22" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/18</span><span class="w2">（火）</span><span class="h">2.0h</span></div>
+  <div class="tdt">分野別総復習④ ストラテジ系（暗記の一括処理）</div>
+
+  <input type="checkbox" class="tick" id="c22_1"><input type="checkbox" class="tick" id="c22_2"><input type="checkbox" class="tick" id="c22_3">
+   <div class="bk" id="b22_1">
+     <div class="bkt"><label for="c22_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B：2問（5分/問）</span><em>40分</em><button type="button" class="tm" data-for="c22_1" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     
+   </div>
+   <div class="bk" id="b22_2">
+     <div class="bkt"><label for="c22_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目A 分野別演習</span><em>60分</em><button type="button" class="tm" data-for="c22_2" data-min="60" aria-label="60分のタイマーを開始">60分</button></div>
+     <div class="bkx">過去問道場で『17. システム戦略』6問・『18. システム企画』3問・『19. 経営戦略マネジメント』6問・『20. 技術戦略マネジメント』1問・『21. ビジネスインダストリ』6問・『22. 企業活動』12問・『23. 法務』6問（計40問）。仕上げに<a href="https://www.youtube.com/watch?v=bEANpRVFheM">08. ストラテジ分野の総まとめ</a>。</div>
+   </div>
+   <div class="bk" id="b22_3">
+     <div class="bkt"><label for="c22_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">暗記リストの音読</span><em>20分</em><button type="button" class="tm" data-for="c22_3" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">ストラテジ系の用語は声に出すと定着が速い。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>ストラテジ系の正答率70%以上。暗記だけで届く分野。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/18<span class="r22_1"> 1済</span><span class="r22_2"> 2済</span><span class="r22_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p23" data-day="23" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/19</span><span class="w2">（水）</span><span class="h">2.0h</span></div>
+  <div class="tdt">科目A ハーフ模試</div>
+
+  <input type="checkbox" class="tick" id="c23_1"><input type="checkbox" class="tick" id="c23_2"><input type="checkbox" class="tick" id="c23_3">
+   <div class="bk" id="b23_1">
+     <div class="bkt"><label for="c23_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目A 30問を45分で</span><em>45分</em><button type="button" class="tm" data-for="c23_1" data-min="45" aria-label="45分のタイマーを開始">45分</button></div>
+     <div class="bkx">過去問道場の「模擬試験」機能または最新回の過去問前半30問。<b>本番同様、途中で解説を見ない</b>。</div>
+   </div>
+   <div class="bk" id="b23_2">
+     <div class="bkt"><label for="c23_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">採点と全問復習</span><em>50分</em><button type="button" class="tm" data-for="c23_2" data-min="50" aria-label="50分のタイマーを開始">50分</button></div>
+     <div class="bkx">正解した問題も「なぜその選択肢か」を確認。間違えた分野を誤答ノートに集計。解説動画 <a href="https://www.youtube.com/watch?v=xhZrwdZSFqc">【令和6年度】科目A問題解説</a> も併用すると速い。</div>
+   </div>
+   <div class="bk" id="b23_3">
+     <div class="bkt"><label for="c23_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">科目B 2問</span><em>25分</em><button type="button" class="tm" data-for="c23_3" data-min="25" aria-label="25分のタイマーを開始">25分</button></div>
+     <div class="bkx">疲れていても必ず。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>30問中21問（70%）が最低ライン。下回った分野を8/21で潰す。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/19<span class="r23_1"> 1済</span><span class="r23_2"> 2済</span><span class="r23_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p24" data-day="24" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/20</span><span class="w2">（木）</span><span class="h">2.0h</span></div>
+  <div class="tdt">科目B ハーフ模試</div>
+
+  <input type="checkbox" class="tick" id="c24_1"><input type="checkbox" class="tick" id="c24_2"><input type="checkbox" class="tick" id="c24_3">
+   <div class="bk" id="b24_1">
+     <div class="bkt"><label for="c24_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B 10問を50分で</span><em>50分</em><button type="button" class="tm" data-for="c24_1" data-min="50" aria-label="50分のタイマーを開始">50分</button></div>
+     <div class="bkx"><b>本番と同じ IPA公式サンプル問題を使います</b>：<a href="https://www.ipa.go.jp/shiken/syllabus/henkou/2022/ssf7ph000000h5tb-att/fe_kamoku_b_set_sample_qs.pdf">IPA公式 科目Bサンプル問題セット（全20問・100分）問題</a> から<b>前半10問を50分で</b>。途中で止めない。分からない問題は飛ばして最後に戻る練習も兼ねる。採点は<a href="https://www.ipa.go.jp/shiken/syllabus/henkou/2022/ssf7ph000000h5tb-att/fe_kamoku_b_set_sample_ans.pdf">同 解答</a>で。</div>
+   </div>
+   <div class="bk" id="b24_2">
+     <div class="bkt"><label for="c24_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">採点と全問復習</span><em>50分</em><button type="button" class="tm" data-for="c24_2" data-min="50" aria-label="50分のタイマーを開始">50分</button></div>
+     <div class="bkx">間違えた問題は答えを見た後、必ず白紙から自力でトレースし直す。<a href="https://www.youtube.com/watch?v=Q-bXLJiZThg">【令和6年度】科目B問題解説</a> で解き方の型を確認。</div>
+   </div>
+   <div class="bk" id="b24_3">
+     <div class="bkt"><label for="c24_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">科目Aの誤答ノート見返し</span><em>20分</em><button type="button" class="tm" data-for="c24_3" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>10問中6問（60%）が最低ライン。時間内に全問手をつけられたかも重要。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/20<span class="r24_1"> 1済</span><span class="r24_2"> 2済</span><span class="r24_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p25" data-day="25" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/21</span><span class="w2">（金）</span><span class="h">2.0h</span></div>
+  <div class="tdt">弱点分野の集中潰し</div>
+
+  <input type="checkbox" class="tick" id="c25_1"><input type="checkbox" class="tick" id="c25_2"><input type="checkbox" class="tick" id="c25_3">
+   <div class="bk" id="b25_1">
+     <div class="bkt"><label for="c25_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B：苦手パターンを2問</span><em>40分</em><button type="button" class="tm" data-for="c25_1" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">リスト操作・再帰など、自分が一番苦手なパターンだけを狙って解く。</div>
+   </div>
+   <div class="bk" id="b25_2">
+     <div class="bkt"><label for="c25_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">誤答ノートの分野を教科書で再読 → 再演習</span><em>60分</em><button type="button" class="tm" data-for="c25_2" data-min="60" aria-label="60分のタイマーを開始">60分</button></div>
+     <div class="bkx">8/19の模試で正答率が低かった分野トップ3を選び、教科書の該当箇所を読み直してから過去問道場で各15問。</div>
+   </div>
+   <div class="bk" id="b25_3">
+     <div class="bkt"><label for="c25_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">計算問題の総ざらい</span><em>20分</em><button type="button" class="tm" data-for="c25_3" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">実効アクセス時間・稼働率・サブネット・損益分岐点・クリティカルパス。この5つを各1問ずつ手で解く。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>弱点トップ3の正答率を70%まで引き上げる。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/21<span class="r25_1"> 1済</span><span class="r25_2"> 2済</span><span class="r25_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p26" data-day="26" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/22</span><span class="w2">（土）</span><span class="h">3.5h</span></div>
+  <div class="tdt">🔴 本番シミュレーション：科目A（90分通し）</div>
+
+  <input type="checkbox" class="tick" id="c26_1"><input type="checkbox" class="tick" id="c26_2"><input type="checkbox" class="tick" id="c26_3"><input type="checkbox" class="tick" id="c26_4">
+   <div class="bk" id="b26_1">
+     <div class="bkt"><label for="c26_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目A 60問を90分で通し</span><em>90分</em><button type="button" class="tm" data-for="c26_1" data-min="90" aria-label="90分のタイマーを開始">90分</button></div>
+     <div class="bkx"><b>本番と同じ時刻・同じ環境で</b>。スマホは別室に。飲み物だけ用意。途中休憩なし。</div>
+   </div>
+   <div class="bk" id="b26_2">
+     <div class="bkt"><label for="c26_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">休憩</span><em>15分</em><button type="button" class="tm" data-for="c26_2" data-min="15" aria-label="15分のタイマーを開始">15分</button></div>
+     <div class="bkx">必ず休む。</div>
+   </div>
+   <div class="bk" id="b26_3">
+     <div class="bkt"><label for="c26_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">全問復習</span><em>90分</em><button type="button" class="tm" data-for="c26_3" data-min="90" aria-label="90分のタイマーを開始">90分</button></div>
+     <div class="bkx">60問すべての解説を読む。<a href="https://www.youtube.com/watch?v=LjI_phbH7No">【令和5年度】科目A問題解説</a> も併用。間違えた問題は教科書の該当ページに戻り、誤答ノートに追記。</div>
+   </div>
+   <div class="bk" id="b26_4">
+     <div class="bkt"><label for="c26_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">科目B 2問</span><em>15分</em><button type="button" class="tm" data-for="c26_4" data-min="15" aria-label="15分のタイマーを開始">15分</button></div>
+     <div class="bkx">軽めに。明日の準備運動。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>60問中42問（70%）以上。ここで届いていれば本番はほぼ大丈夫。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/22<span class="r26_1"> 1済</span><span class="r26_2"> 2済</span><span class="r26_3"> 3済</span><span class="r26_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p27" data-day="27" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/23</span><span class="w2">（日）</span><span class="h">3.5h</span></div>
+  <div class="tdt">🔴 本番シミュレーション：科目B（100分通し）</div>
+
+  <input type="checkbox" class="tick" id="c27_1"><input type="checkbox" class="tick" id="c27_2"><input type="checkbox" class="tick" id="c27_3">
+   <div class="bk" id="b27_1">
+     <div class="bkt"><label for="c27_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B 20問を100分で通し</span><em>100分</em><button type="button" class="tm" data-for="c27_1" data-min="100" aria-label="100分のタイマーを開始">100分</button></div>
+     <div class="bkx"><b><a href="https://www.ipa.go.jp/shiken/syllabus/henkou/2022/ssf7ph000000h5tb-att/fe_kamoku_b_set_sample_qs.pdf">IPA公式 科目Bサンプル問題セット（全20問・100分）問題</a> の全20問を100分で通し</b>（本番と同じ問題数・同じ時間）。セキュリティ問題（問17〜20）を先に片付ける戦略を試す。メモ用紙にトレース表を書く練習も本番通りに。採点は<a href="https://www.ipa.go.jp/shiken/syllabus/henkou/2022/ssf7ph000000h5tb-att/fe_kamoku_b_set_sample_ans.pdf">同 解答</a>。</div>
+   </div>
+   <div class="bk" id="b27_2">
+     <div class="bkt"><label for="c27_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">休憩</span><em>15分</em><button type="button" class="tm" data-for="c27_2" data-min="15" aria-label="15分のタイマーを開始">15分</button></div>
+     
+   </div>
+   <div class="bk" id="b27_3">
+     <div class="bkt"><label for="c27_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">全問復習</span><em>95分</em><button type="button" class="tm" data-for="c27_3" data-min="95" aria-label="95分のタイマーを開始">95分</button></div>
+     <div class="bkx">間違えた問題は答えを見た後、白紙から自力でトレースし直す。ここが本番までで一番重要な90分。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>20問中12問（60%）以上。届かなくても残り2日で伸びるので落ち込まない。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/23<span class="r27_1"> 1済</span><span class="r27_2"> 2済</span><span class="r27_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p28" data-day="28" data-total="3">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/24</span><span class="w2">（月）</span><span class="h">2.0h</span></div>
+  <div class="tdt">最終弱点潰し</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>付録-1 重要用語の総復習（寝る前10分）</span></div>
+  <input type="checkbox" class="tick" id="c28_1"><input type="checkbox" class="tick" id="c28_2"><input type="checkbox" class="tick" id="c28_3">
+   <div class="bk" id="b28_1">
+     <div class="bkt"><label for="c28_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">科目B：8/23で間違えた問題を全部解き直し</span><em>50分</em><button type="button" class="tm" data-for="c28_1" data-min="50" aria-label="50分のタイマーを開始">50分</button></div>
+     <div class="bkx">白紙から。同じ問題を解けるようにするのが最速の得点アップ。</div>
+   </div>
+   <div class="bk" id="b28_2">
+     <div class="bkt"><label for="c28_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目A：誤答ノートの問題を全部解き直し</span><em>50分</em><button type="button" class="tm" data-for="c28_2" data-min="50" aria-label="50分のタイマーを開始">50分</button></div>
+     <div class="bkx">新しい問題には手を出さない。すでに間違えた問題を確実に取れるようにする。</div>
+   </div>
+   <div class="bk" id="b28_3">
+     <div class="bkt"><label for="c28_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">付録「寝る前10分の確認リスト」を1周</span><em>20分</em><button type="button" class="tm" data-for="c28_3" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 3 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>間違えた問題の再現率100%を目指す。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/24<span class="r28_1"> 1済</span><span class="r28_2"> 2済</span><span class="r28_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p29" data-day="29" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/25</span><span class="w2">（火）</span><span class="h">2.0h</span></div>
+  <div class="tdt">前日 ─ 暗記モノの総ざらいと早寝</div>
+  <div class="secbox"><b>教科書の担当範囲</b><span>00-04 試験当日の心得</span><span>付録-2 重要用語の総復習（試験直前）</span></div>
+  <input type="checkbox" class="tick" id="c29_1"><input type="checkbox" class="tick" id="c29_2"><input type="checkbox" class="tick" id="c29_3"><input type="checkbox" class="tick" id="c29_4">
+   <div class="bk" id="b29_1">
+     <div class="bkt"><label for="c29_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">付録「試験直前の確認リスト」を全ページ</span><em>60分</em><button type="button" class="tm" data-for="c29_1" data-min="60" aria-label="60分のタイマーを開始">60分</button></div>
+     <div class="bkx">教科書巻末の付録。ここに載っている内容が本番でそのまま出ることも多い。</div>
+   </div>
+   <div class="bk" id="b29_2">
+     <div class="bkt"><label for="c29_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">暗記系の最終確認</span><em>40分</em><button type="button" class="tm" data-for="c29_2" data-min="40" aria-label="40分のタイマーを開始">40分</button></div>
+     <div class="bkx">法務・セキュリティ用語・略語（RAID/SLA/RFP/WBS等）・ストラテジ用語。声に出して確認。</div>
+   </div>
+   <div class="bk" id="b29_3">
+     <div class="bkt"><label for="c29_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">持ち物と会場の最終確認</span><em>20分</em><button type="button" class="tm" data-for="c29_3" data-min="20" aria-label="20分のタイマーを開始">20分</button></div>
+     <div class="bkx">本人確認書類・確認票を鞄に入れる。会場までの経路と所要時間を確認。集合30分前に着く時刻をアラームに設定。</div>
+   </div>
+   <div class="bk" id="b29_4">
+     <div class="bkt"><label for="c29_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">23時までに就寝</span><em>—</em></div>
+     <div class="bkx"><b>徹夜は絶対にしない</b>。科目Bは頭の回転がそのまま点数になります。睡眠が最後の得点源。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>新しいことは一切やらない。知っていることを確実にする日。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/25<span class="r29_1"> 1済</span><span class="r29_2"> 2済</span><span class="r29_3"> 3済</span><span class="r29_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+<div class="pane" id="p30" data-day="30" data-total="4">
+  <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
+  <div class="tdh"><span class="d">8/26</span><span class="w2">（水）</span><span class="h">本番</span></div>
+  <div class="tdt">🎯 基本情報技術者試験 本番</div>
+
+  <input type="checkbox" class="tick" id="c30_1"><input type="checkbox" class="tick" id="c30_2"><input type="checkbox" class="tick" id="c30_3"><input type="checkbox" class="tick" id="c30_4">
+   <div class="bk" id="b30_1">
+     <div class="bkt"><label for="c30_1" class="mk" aria-label="完了にする"></label><b>1</b><span class="bkn">集合30分前に会場着</span><em>—</em></div>
+     <div class="bkx">CBTは遅刻＝受験不可。余裕を持って。</div>
+   </div>
+   <div class="bk" id="b30_2">
+     <div class="bkt"><label for="c30_2" class="mk" aria-label="完了にする"></label><b>2</b><span class="bkn">科目A（60問）</span><em>90分</em><button type="button" class="tm" data-for="c30_2" data-min="90" aria-label="90分のタイマーを開始">90分</button></div>
+     <div class="bkx">1問90秒。15秒で分からなければフラグを立てて飛ばす。45分で30問通過が目安。</div>
+   </div>
+   <div class="bk" id="b30_3">
+     <div class="bkt"><label for="c30_3" class="mk" aria-label="完了にする"></label><b>3</b><span class="bkn">休憩</span><em>—</em></div>
+     <div class="bkx">糖分と水分を。科目Bは集中力勝負。</div>
+   </div>
+   <div class="bk" id="b30_4">
+     <div class="bkt"><label for="c30_4" class="mk" aria-label="完了にする"></label><b>4</b><span class="bkn">科目B（20問）</span><em>100分</em><button type="button" class="tm" data-for="c30_4" data-min="100" aria-label="100分のタイマーを開始">100分</button></div>
+     <div class="bkx">セキュリティ4問を先に処理 → 擬似言語16問を1問5分。トレース表は必ずメモ用紙に手で書く。</div>
+   </div>
+  <div class="ptally"><span class="pt"><b class="cnt"></b> / 4 済</span><span class="pbar"><i style="width:calc(var(--pct,0) * 1%)"></i></span></div>
+  <div class="goal"><b>この日のゴール：</b>各科目600点／1000点で合格。終了直後に画面でスコアが出ます。</div>
+  
+  <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/26<span class="r30_1"> 1済</span><span class="r30_2"> 2済</span><span class="r30_3"> 3済</span><span class="r30_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
+</div>
+</div>
+
+<div class="card">
+  <div class="lab">科目Aの正答率</div>
+  <div class="scnow"><span class="v" id="scnow">—</span><span class="sub" id="scsub">まだ記録がありません</span></div>
+  <div class="chart" id="chart"></div>
+  <form class="scf" id="scform">
+    <input class="wide" type="date" id="scdate" aria-label="解いた日">
+    <input type="number" id="sccor" placeholder="正解数" inputmode="numeric" min="0" step="1" aria-label="正解数">
+    <input type="number" id="scnum" placeholder="問題数" inputmode="numeric" min="1" step="1" aria-label="問題数">
+    <button type="submit">記録する</button>
+  </form>
+  <div id="sclist"></div>
+  <div class="note">過去問道場を解いたらその場で入れてください。同じ日付を入れ直すと上書きされます。目標は本番までに80%です。</div>
+</div>
+
+<div class="card" id="savecard">
+  <div class="lab">記録の残しかた</div>
+  <div class="sstat ok"><b>やることは1つだけ</b><br>終わったタスクの丸をタップする。それだけで保存されます。<br>時間の横の<b>「40分」</b>を押すとタイマーが始まり、鳴り終わると自動で完了になります。</div>
+  <div class="sstat ng" style="margin-top:11px">保存の可否を確認中です。</div>
+  <button type="button" class="btn" id="copybtn">表示中の日の記録をコピー</button>
+  <div class="note">↑ 予定を組み直したいときだけ、この行をチャットに送ってください。普段は不要です。</div>
+</div>
+
+<div class="card">
+  <div class="lab">バックアップ／端末の引っ越し</div>
+  <p class="note" style="margin-top:7px">下の文字列が記録のすべてです。別の端末で使うときや、消えたときの保険として、メモアプリに貼っておいてください。</p>
+  <textarea class="ta" id="exp" readonly aria-label="書き出したデータ"></textarea>
+  <button type="button" class="btn btn2" id="expbtn">コピーする</button>
+  <p class="note" style="margin-top:13px">↓ 貼り付けて読み込むと、チェックと正答率が復元されます。</p>
+  <textarea class="ta" id="imp" placeholder="ここに貼り付け" aria-label="読み込むデータ"></textarea>
+  <button type="button" class="btn btn2" id="impbtn">読み込む</button>
+</div>
+
+<div class="card">
+  <div class="lab">チャットに送るとき（任意）</div>
+  <p class="note" style="margin-top:7px">普段は不要です。<b style="color:var(--ink)">予定が大きく崩れて組み直したいとき</b>だけ、この形式で送ってください。</p>
+  <div class="syn">
+    <b>1済</b> <em>タスク1が終わった（番号ごとに記録）</em><br>
+    <b>1済 2済</b> <em>まとめて報告</em><br>
+    <b>済</b> <em>今日の分が全部終わった</em><br>
+    <b>8/1 済</b> <em>日付を付ければその日の記録</em><br>
+    <b>7/30 ×</b> <em>できなかった</em><br>
+    <b>済 A20問 65%</b> <em>数字を残す</em>
+  </div>
+  <div class="keys">
+    <div><b class="k1">済</b><span>予定どおり終わった</span></div>
+    <div><b class="k2">半</b><span>一部だけできた</span></div>
+    <div><b class="k3">×</b><span>できなかった</span></div>
+  </div>
+  <div class="note">複数行まとめて送ってもOK。音声入力でも大丈夫です。送るたびに、この進捗ボードの最新版を返します。</div>
+</div>
+
+<div class="card">
+  <div class="lab">全30日の記録</div>
+  <div class="log">
+    <div class="lr">
+      <span class="ld">7/27<em>月</em></span>
+      <span class="chip done">済</span>
+      <span class="lt">準備日 ─ 申込確認・実力測定・環境づくり<b>CBT予約済み／過去問A20問 正答率65%／序章・科目B着手＋アカウント作成済み</b></span>
+    </div>
+    <div class="lr">
+      <span class="ld">7/28<em>火</em></span>
+      <span class="chip done">済</span>
+      <span class="lt">第1章 基礎理論①（データの単位〜2進数の四則演算）<b>1〜3すべて実施。出る順問題集は完了。過去問道場は分類が広く範囲外の問題が多かったため中断（→分野別過去問題の小分類に切替済み）</b></span>
+    </div>
+    <div class="lr">
+      <span class="ld">7/29<em>水</em></span>
+      <span class="chip done">済</span>
+      <span class="lt">第2章① 集合と論理演算・論理回路<b>1〜4すべて実施。第1章 完了</b></span>
+    </div>
+    <div class="lr">
+      <span class="ld">7/30<em>木</em></span>
+      <span class="chip part">半</span>
+      <span class="lt">第2章② 逆ポーランド記法・オートマトン・AI<b>2済：科目B 繰り返し（while/for）＋公式問3・問4／3済：科目A第2章の動画＋第3章①の動画も前倒し視聴、第2章の教科書問題も実施。1（高速復習）と4（章末＋道場20問）は未着手</b></span>
+    </div>
+    <div class="lr">
+      <span class="ld">7/31<em>金</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">キャッチアップ ＋ 第3章 03-01 データ構造</span>
+    </div>
+    <div class="lr lnow">
+      <span class="ld">8/1<em>土</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第3章 03-02〜03-05 ＋ 第12章 12-04 オブジェクト指向</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/2<em>日</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第4章① CPU・記憶装置（04-01〜04-03）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/3<em>月</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第5章 システムの構成要素（05-01〜05-04）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/4<em>火</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第6章 ソフトウェア（06-01〜06-05）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/5<em>水</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第4章② 入出力 ＋ 第7章 ハードウェア ＋ 第8章 UI/マルチメディア</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/6<em>木</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第9章① データベース（09-01〜09-03 設計・正規化）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/7<em>金</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第9章② データベース（09-04〜09-06 DBMS・排他制御）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/8<em>土</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第10章 ネットワーク（10-01〜10-08）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/9<em>日</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第11章 情報セキュリティ（11-01〜11-06）＋ 第22章 22-03</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/10<em>月</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第12章 システム開発（12-01〜12-03・12-05）＋ 第13章</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/11<em>火祝</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第14章 PM ＋ 第15章 サービスマネジメント/監査 ＋ 第16章 システム戦略</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/12<em>水</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第17章 システム企画 ＋ 第18章 経営戦略マネジメント</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/13<em>木</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第19章 ビジネスインダストリ ＋ 第20章 企業活動（OR・IE含む）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/14<em>金</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">第21章 法務（21-01〜21-04）─ 教科書1周完了</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/15<em>土</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">分野別総復習① テクノロジ系（基礎理論・アルゴリズム・コンピュータ）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/16<em>日</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">分野別総復習② データベース・ネットワーク・セキュリティ</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/17<em>月</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">分野別総復習③ 開発技術・マネジメント</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/18<em>火</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">分野別総復習④ ストラテジ系（暗記の一括処理）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/19<em>水</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">科目A ハーフ模試</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/20<em>木</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">科目B ハーフ模試</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/21<em>金</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">弱点分野の集中潰し</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/22<em>土</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">🔴 本番シミュレーション：科目A（90分通し）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/23<em>日</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">🔴 本番シミュレーション：科目B（100分通し）</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/24<em>月</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">最終弱点潰し</span>
+    </div>
+    <div class="lr">
+      <span class="ld">8/25<em>火</em></span>
+      <span class="chip none">未</span>
+      <span class="lt">前日 ─ 暗記モノの総ざらいと早寝</span>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="saved" id="toast"></div>
+<script>window.FE={"start":"2026-07-27","exam":30,"dates":["7/27","7/28","7/29","7/30","7/31","8/1","8/2","8/3","8/4","8/5","8/6","8/7","8/8","8/9","8/10","8/11","8/12","8/13","8/14","8/15","8/16","8/17","8/18","8/19","8/20","8/21","8/22","8/23","8/24","8/25","8/26"]}</script>
+<script>/* 保存レイヤー＋自走機能。JSが動かない環境でもチェックはCSSだけで機能する。
+   window.FE = { start:'2026-07-27', exam:30, dates:['7/27',...] } を前提にする。 */
+(function () {
+  document.body.classList.add('js');
+  var FE = window.FE || {}, EXAM = FE.exam || 30, DATES = FE.dates || [];
+  var KEY = 'fe-board-v1', SKEY = 'fe-scores-v1', TKEY = 'fe-timer-v1';
+  var store = null;
+  try { localStorage.setItem(KEY + '-t', '1'); localStorage.removeItem(KEY + '-t'); store = localStorage; } catch (e) { store = null; }
+
+  var ticks = [].slice.call(document.querySelectorAll('.tick'));
+  function idOf(t) { return t.id.replace('c', '').split('_'); }
+  function get(k, d) { if (!store) return d; try { var v = JSON.parse(store.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function put(k, v) { if (store) { try { store.setItem(k, JSON.stringify(v)); } catch (e) {} } }
+
+  /* ---------- 1. 今日の自動判定 ---------- */
+  var sp = (FE.start || '2026-07-27').split('-');
+  var START = Date.UTC(+sp[0], +sp[1] - 1, +sp[2]);
+  function todayIdx() {
+    var n = new Date(), t = Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
+    return Math.max(0, Math.min(EXAM, Math.round((t - START) / 864e5)));
+  }
+  var TODAY = todayIdx();
+
+  function applyToday() {
+    var r = document.getElementById('d' + TODAY);
+    if (r) r.checked = true;
+    [].slice.call(document.querySelectorAll('.cell')).forEach(function (c) {
+      c.classList.remove('now');
+      var tag = c.querySelector('.nowtag');
+      if (tag) tag.parentNode.removeChild(tag);
+    });
+    var cell = document.querySelector('label[for=d' + TODAY + ']');
+    if (cell && TODAY < EXAM) {
+      cell.classList.add('now');
+      var s = document.createElement('span');
+      s.className = 'nowtag'; s.textContent = '今日';
+      cell.appendChild(s);
+    }
+    var num = document.querySelector('.hero .num');
+    if (num) num.textContent = Math.max(0, EXAM - TODAY);
+    [].slice.call(document.querySelectorAll('.pane')).forEach(function (p) {
+      var i = +p.getAttribute('data-day');
+      var lab = p.querySelector('.lab');
+      if (lab && lab.firstChild) lab.firstChild.nodeValue =
+        i === TODAY ? '今日のメニュー' : i < TODAY ? '過去の予定' : 'これからの予定';
+      var g = p.querySelector('.goal b');
+      if (g) g.textContent = (i === TODAY ? '今日のゴール' : 'この日のゴール') + '：';
+    });
+    [].slice.call(document.querySelectorAll('.lr')).forEach(function (r2, i) {
+      r2.classList.toggle('lnow', i === TODAY);
+    });
+  }
+  applyToday();
+  setInterval(function () { var t = todayIdx(); if (t !== TODAY) { TODAY = t; applyToday(); } }, 60000);
+
+  /* ---------- チェックの保存 ---------- */
+  function getState() {
+    var st = {};
+    ticks.forEach(function (t) {
+      if (!t.checked) return;
+      var p = idOf(t);
+      (st[p[0]] = st[p[0]] || []).push(+p[1]);
+    });
+    return st;
+  }
+  function applyState(st) {
+    ticks.forEach(function (t) {
+      var p = idOf(t), a = st[p[0]];
+      if (a && a.indexOf(+p[1]) >= 0) t.checked = true;
+    });
+  }
+  if (store) applyState(get(KEY, {}));
+  function save() { put(KEY, getState()); }
+
+  function bars() {
+    [].slice.call(document.querySelectorAll('.pane')).forEach(function (p) {
+      var all = [].slice.call(p.querySelectorAll('.tick'));
+      var on = all.filter(function (t) { return t.checked; }).length;
+      p.style.setProperty('--pct', all.length ? Math.round(on / all.length * 100) : 0);
+    });
+    pace();
+  }
+
+  /* ---------- 遅れの自動検知 ---------- */
+  function dayStat(i) {
+    var p = document.querySelector('.pane[data-day="' + i + '"]');
+    if (!p) return null;
+    var all = [].slice.call(p.querySelectorAll('.tick'));
+    if (!all.length) return null;
+    var on = all.filter(function (t) { return t.checked; }).length;
+    /* チャットで「済」と記録した日は、タスク単位の記録が無くても完了として扱う */
+    var done = !!p.querySelector('.pst.done');
+    return { all: all.length, on: on, full: done || on === all.length };
+  }
+  function pace() {
+    var el = document.getElementById('pace'); if (!el) return;
+    var behind = [], partial = 0;
+    for (var i = 0; i < TODAY && i < EXAM; i++) {
+      var s = dayStat(i); if (!s) continue;
+      if (!s.full) { behind.push(DATES[i]); if (s.on) partial++; }
+    }
+    var n = behind.length;
+    var t = dayStat(TODAY);
+    var todayTxt = TODAY >= EXAM ? '本番当日です。'
+      : t ? '今日は ' + t.on + '/' + t.all + ' 済。' : '';
+    if (TODAY === 0) {
+      el.className = 'pace ok';
+      el.innerHTML = '今日から開始です<em>' + todayTxt + '</em>';
+      return;
+    }
+    if (n === 0) {
+      el.className = 'pace ok';
+      el.innerHTML = '✓ 予定どおり進んでいます<em>' + todayTxt + ' 昨日までの' + TODAY + '日はすべて完了。</em>';
+      return;
+    }
+    var list = behind.slice(0, 4).join('・') + (n > 4 ? ' ほか' + (n - 4) + '日' : '');
+    if (n <= 2) {
+      el.className = 'pace warn';
+      el.innerHTML = n + '日ぶん未完了です<em>' + list + '　' + todayTxt
+        + ' 忘却曲線ブロックだけでも先に埋めると戻せます。</em>';
+    } else {
+      el.className = 'pace bad';
+      el.innerHTML = n + '日ぶん遅れています<em>' + list + '　' + todayTxt
+        + ' ここまで開くと自力で詰めるのは難しいので、チャットで予定を組み直してください。</em>';
+    }
+  }
+
+  var toast = document.getElementById('toast'), tid;
+  function flash(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('on');
+    clearTimeout(tid); tid = setTimeout(function () { toast.classList.remove('on'); }, 1600);
+  }
+
+  /* ---------- 4. ブロックのタイマー ---------- */
+  var running = null, rtick = null;
+  function mmss(ms) {
+    var s = Math.max(0, Math.round(ms / 1000));
+    return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+  }
+  function beep() {
+    try {
+      var A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+      var c = new A(), o = c.createOscillator(), g = c.createGain();
+      o.connect(g); g.connect(c.destination); o.frequency.value = 880; o.type = 'sine';
+      g.gain.setValueAtTime(0.0001, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.15, c.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.9);
+      o.start(); o.stop(c.currentTime + 0.95);
+    } catch (e) {}
+  }
+  function paint() {
+    [].slice.call(document.querySelectorAll('.tm')).forEach(function (b) {
+      var on = running && running.id === b.getAttribute('data-for');
+      b.classList.toggle('on', !!on);
+      b.textContent = on ? mmss(running.end - Date.now()) : b.getAttribute('data-min') + '分';
+    });
+  }
+  function stopT() {
+    running = null; put(TKEY, null);
+    if (rtick) { clearInterval(rtick); rtick = null; }
+    paint();
+  }
+  function loop() {
+    if (!running) return;
+    if (Date.now() >= running.end) {
+      var cb = document.getElementById(running.id);
+      if (cb && !cb.checked) { cb.checked = true; save(); bars(); refreshExp(); }
+      stopT(); beep(); flash('タイマー終了 — 完了にしました');
+      return;
+    }
+    paint();
+  }
+  function startT(cid, min) {
+    running = { id: cid, end: Date.now() + min * 60000 };
+    put(TKEY, running);
+    if (rtick) clearInterval(rtick);
+    rtick = setInterval(loop, 1000);
+    paint(); flash(min + '分のタイマーを開始');
+  }
+  [].slice.call(document.querySelectorAll('.tm')).forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var cid = b.getAttribute('data-for'), min = +b.getAttribute('data-min');
+      if (running && running.id === cid) { stopT(); flash('タイマーを止めました'); }
+      else startT(cid, min);
+    });
+  });
+  var savedT = get(TKEY, null);
+  if (savedT && savedT.end > Date.now()) { running = savedT; rtick = setInterval(loop, 1000); }
+  else if (savedT) put(TKEY, null);
+  paint();
+
+  /* ---------- 2. 正答率の記録とグラフ ---------- */
+  var scores = get(SKEY, []);          /* [{d:'2026-08-01', c:13, n:20}] */
+  function pct(s) { return s.n ? Math.round(s.c / s.n * 1000) / 10 : 0; }
+  function iso(i) { return new Date(START + i * 864e5).toISOString().slice(0, 10); }
+  function label(d) { var p = d.split('-'); return (+p[1]) + '/' + (+p[2]); }
+  function idxOf(d) {
+    var p = d.split('-');
+    return Math.round((Date.UTC(+p[0], +p[1] - 1, +p[2]) - START) / 864e5);
+  }
+  function sortScores() { scores.sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; }); }
+
+  var L = 32, R = 336, T = 12, B = 140, GOAL = 80;
+  function xOf(i) { return Math.round((L + i * (R - L) / EXAM) * 10) / 10; }
+  function yOf(p) { return Math.round((B - (p / 100) * (B - T)) * 10) / 10; }
+
+  function chart() {
+    var box = document.getElementById('chart'); if (!box) return;
+    if (!scores.length) {
+      box.innerHTML = '<div class="empty">まだ記録がありません。過去問を解いたら上の欄に入れてください。</div>';
+      return;
+    }
+    var pts = scores.map(function (s) {
+      return { x: xOf(Math.max(0, Math.min(EXAM, idxOf(s.d)))), y: yOf(pct(s)), s: s };
+    });
+    var g = '';
+    [0, 20, 40, 60, 100].forEach(function (v) {
+      g += '<line class="gl" x1="' + L + '" y1="' + yOf(v) + '" x2="' + R + '" y2="' + yOf(v) + '"/>'
+        + '<text class="ax" x="' + (L - 6) + '" y="' + (yOf(v) + 4) + '" text-anchor="end">' + v + '</text>';
+    });
+    g += '<line class="goalline" x1="' + L + '" y1="' + yOf(GOAL) + '" x2="' + R + '" y2="' + yOf(GOAL) + '"/>'
+      + '<text class="ax" x="' + (L - 6) + '" y="' + (yOf(GOAL) + 4) + '" text-anchor="end">' + GOAL + '</text>'
+      + '<text class="goaltx" x="' + (L + 4) + '" y="' + (yOf(GOAL) - 7) + '" text-anchor="start">目標 80%</text>';
+    g += '<line class="gl" x1="' + L + '" y1="' + B + '" x2="' + R + '" y2="' + B + '"/>';
+    [0, 7, 14, 21, EXAM].forEach(function (i) {
+      g += '<text class="ax" x="' + xOf(i) + '" y="' + (B + 17) + '" text-anchor="middle">' + (DATES[i] || '') + '</text>';
+    });
+    if (pts.length > 1) g += '<polyline class="ln" points="' + pts.map(function (p) { return p.x + ',' + p.y; }).join(' ') + '"/>';
+    pts.forEach(function (p) {
+      g += '<circle class="dotr" cx="' + p.x + '" cy="' + p.y + '" r="6"/>'
+        + '<circle class="dot" cx="' + p.x + '" cy="' + p.y + '" r="4"><title>'
+        + label(p.s.d) + '　' + p.s.c + '/' + p.s.n + '　' + pct(p.s) + '%</title></circle>';
+    });
+    var last = pts[pts.length - 1];
+    var ly = last.y < T + 20 ? last.y + 21 : last.y - 12;
+    g += '<text class="val" x="' + last.x + '" y="' + ly + '" text-anchor="' + (last.x > R - 30 ? 'end' : 'middle') + '">' + pct(last.s) + '%</text>';
+    box.innerHTML = '<svg viewBox="0 0 348 168" role="img" aria-label="科目Aの正答率の推移">' + g + '</svg>';
+  }
+
+  function table() {
+    var t = document.getElementById('sclist'); if (!t) return;
+    if (!scores.length) { t.innerHTML = ''; return; }
+    t.innerHTML = '<div class="srh"><span>日付</span><span>正解 / 問題</span><span>正答率</span><span></span></div>'
+      + scores.slice().reverse().map(function (s) {
+        var p = pct(s);
+        return '<div class="sr"><span class="sd">' + label(s.d) + '</span>'
+          + '<span class="sn">' + s.c + ' / ' + s.n + '</span>'
+          + '<span class="sp' + (p >= GOAL ? ' hit' : '') + '">' + p + '%</span>'
+          + '<button type="button" class="sx" data-d="' + s.d + '" aria-label="この記録を削除">×</button></div>';
+      }).join('');
+    [].slice.call(t.querySelectorAll('.sx')).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = b.getAttribute('data-d');
+        scores = scores.filter(function (s) { return s.d !== d; });
+        put(SKEY, scores); chart(); table(); stat(); refreshExp(); flash('削除しました');
+      });
+    });
+  }
+
+  function stat() {
+    var el = document.getElementById('scnow'); if (!el) return;
+    var sub = document.getElementById('scsub');
+    if (!scores.length) { el.textContent = '—'; if (sub) sub.textContent = 'まだ記録がありません'; return; }
+    var lastS = scores[scores.length - 1], p = pct(lastS);
+    el.textContent = p + '%';
+    if (!sub) return;
+    if (scores.length > 1) {
+      var d = Math.round((p - pct(scores[scores.length - 2])) * 10) / 10;
+      sub.textContent = label(lastS.d) + '時点　前回比 ' + (d > 0 ? '+' : '') + d + 'pt';
+    } else sub.textContent = label(lastS.d) + '時点';
+  }
+
+  /* ---------- 3. エクスポート／インポート ---------- */
+  var ex = document.getElementById('exp'), im = document.getElementById('imp');
+  function refreshExp() { if (ex) ex.value = JSON.stringify({ v: 1, ticks: getState(), scores: scores }); }
+
+  ticks.forEach(function (t) {
+    t.addEventListener('change', function () { save(); bars(); refreshExp(); if (store) flash('保存しました'); });
+  });
+
+  var sf = document.getElementById('scform');
+  if (sf) {
+    var di = document.getElementById('scdate'), ci = document.getElementById('sccor'), ni = document.getElementById('scnum');
+    di.value = iso(TODAY);
+    sf.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var c = parseInt(ci.value, 10), n = parseInt(ni.value, 10), d = di.value;
+      if (!d || isNaN(c) || isNaN(n) || n <= 0) { flash('問題数と正解数を入れてください'); return; }
+      if (c > n) { flash('正解数が問題数を超えています'); return; }
+      scores = scores.filter(function (s) { return s.d !== d; });
+      scores.push({ d: d, c: c, n: n }); sortScores();
+      put(SKEY, scores); chart(); table(); stat(); refreshExp();
+      ci.value = ''; ni.value = '';
+      flash('正答率を記録しました');
+    });
+  }
+  sortScores(); chart(); table(); stat(); refreshExp();
+
+  function copyText(txt, el) {
+    function fb() {
+      if (el) { el.focus(); el.select(); }
+      try { document.execCommand('copy'); flash('コピーしました'); }
+      catch (e) { flash('長押しでコピーしてください'); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { flash('コピーしました'); }, fb);
+    else fb();
+  }
+  var exb = document.getElementById('expbtn'), imb = document.getElementById('impbtn');
+  if (exb) exb.addEventListener('click', function () { refreshExp(); copyText(ex.value, ex); });
+  if (imb) imb.addEventListener('click', function () {
+    var raw = (im.value || '').trim();
+    if (!raw) { flash('貼り付けてから押してください'); return; }
+    var o; try { o = JSON.parse(raw); } catch (e) { flash('読み込めません（JSONが壊れています）'); return; }
+    if (!o || typeof o !== 'object') { flash('形式が違います'); return; }
+    if (o.ticks) { applyState(o.ticks); save(); bars(); }
+    if (Object.prototype.toString.call(o.scores) === '[object Array]') {
+      scores = o.scores.filter(function (s) { return s && s.d && s.n > 0; });
+      sortScores(); put(SKEY, scores); chart(); table(); stat();
+    }
+    refreshExp(); im.value = '';
+    flash('読み込みました');
+  });
+
+  /* ---------- 表示中パネルのコピペ行 ---------- */
+  var btn = document.getElementById('copybtn');
+  if (btn) btn.addEventListener('click', function () {
+    var vis = [].slice.call(document.querySelectorAll('.pane')).filter(function (p) { return p.offsetParent !== null; })[0];
+    if (!vis) return;
+    var date = vis.querySelector('.tdh .d').textContent.trim();
+    var all = [].slice.call(vis.querySelectorAll('.tick'));
+    var on = all.filter(function (t) { return t.checked; });
+    var txt = !on.length ? date + ' ×'
+      : on.length === all.length ? date + ' 済'
+      : date + ' ' + on.map(function (t) { return t.id.split('_')[1] + '済'; }).join(' ');
+    copyText(txt, null);
+  });
+
+  var ng = document.querySelector('#savecard .sstat.ng');
+  if (ng) {
+    if (store) {
+      ng.className = 'sstat ok';
+      ng.innerHTML = '<b>✓ 自動保存が有効です。</b>閉じて開き直してもチェックと正答率は残ります。'
+        + '<br>Safariなら 共有ボタン →「ホーム画面に追加」でアプリのように使えます。';
+    } else {
+      ng.innerHTML = '<b>この開き方では自動保存できません。</b>チェックは効きますが、閉じると戻ります。'
+        + '公開URLをSafariやChromeで開けば保存が有効になります。';
+    }
+  }
+  /* ---------- オフライン対応（https / localhost のみ） ---------- */
+  if ('serviceWorker' in navigator
+      && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
+    });
+  }
+
+  bars();
+})();
+</script>
+</body></html>
