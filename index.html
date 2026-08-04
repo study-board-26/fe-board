@@ -116,6 +116,8 @@ body.js .btn{display:block}
 .panecard{border:2px solid var(--acc)}
 .cell{cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
 .pst{margin-left:auto;font-size:12px;font-weight:800;padding:2px 10px;border-radius:99px}
+.pst:empty{display:none}
+.tally b{font-weight:800;font-variant-numeric:tabular-nums}
 .pst.done{background:var(--ok);color:#fff}
 .pst.part{background:var(--halfs);color:var(--half);box-shadow:inset 0 0 0 1.5px var(--half)}
 .pst.miss{background:var(--faint);color:var(--miss)}
@@ -243,13 +245,13 @@ body.js .bkt em{display:none}
     <span class="side"><b>8月26日（水）</b>基本情報技術者試験</span>
   </div>
   <div class="meter">
-    <div class="mrow"><span class="b">3</span><span class="s">/ 30 日 完了</span><span class="p">記録済み 4日</span></div>
-    <div class="track"><i style="width:10%"></i><u style="width:3.3333333333333335%"></u></div>
+    <div class="mrow"><span class="b" id="hDone">3</span><span class="s">/ 30 日 完了</span><span class="p">記録済み <b id="hLogged">4</b>日</span></div>
+    <div class="track"><i id="hBarDone" style="width:10%"></i><u id="hBarPart" style="width:3.3333333333333335%"></u></div>
     <div class="tally">
-      <span><i style="background:var(--ok)"></i>済 3</span>
-      <span><i style="background:var(--half)"></i>半 1</span>
-      <span><i style="background:var(--miss)"></i>× 0</span>
-      <span><i style="background:var(--faint)"></i>未記録 26</span>
+      <span><i style="background:var(--ok)"></i>済 <b id="tDone">3</b></span>
+      <span><i style="background:var(--half)"></i>半 <b id="tPart">1</b></span>
+      <span><i style="background:var(--miss)"></i>× <b id="tMiss">0</b></span>
+      <span><i style="background:var(--faint)"></i>未記録 <b id="tNone">26</b></span>
     </div>
     <div class="note">ペースの目安は 1日1マス。合計 約73時間（平日2h・休日3.5h）</div>
     <div class="pace" id="pace"></div>
@@ -260,23 +262,23 @@ body.js .bkt em{display:none}
   <div class="lab" style="margin-bottom:11px">30日の進み方</div>
   <div class="wk">
     <div class="wkh"><span class="wkr">7/27 – 8/2</span><span class="wkt">準備＋基礎理論・アルゴリズム</span></div>
-    <div class="row"><label for="d0" class="cell done"><span class="dn">✓</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d1" class="cell done"><span class="dn">✓</span><span class="dw">火</span><span class="load"><i style="width:44%"></i></span></label><label for="d2" class="cell done"><span class="dn">✓</span><span class="dw">水</span><span class="load"><i style="width:49%"></i></span></label><label for="d3" class="cell part"><span class="dn">◐</span><span class="dw">木</span><span class="load"><i style="width:21%"></i></span></label><label for="d4" class="cell "><span class="dn">31</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d5" class="cell  now"><span class="dn">1</span><span class="dw">土</span><span class="load"><i style="width:114%"></i></span><span class="nowtag">今日</span></label><label for="d6" class="cell "><span class="dn">2</span><span class="dw">日</span><span class="load"><i style="width:119%"></i></span></label></div>
+    <div class="row"><label for="d0" class="cell done" data-dn="27"><span class="dn">✓</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d1" class="cell done" data-dn="28"><span class="dn">✓</span><span class="dw">火</span><span class="load"><i style="width:44%"></i></span></label><label for="d2" class="cell done" data-dn="29"><span class="dn">✓</span><span class="dw">水</span><span class="load"><i style="width:49%"></i></span></label><label for="d3" class="cell part" data-dn="30"><span class="dn">◐</span><span class="dw">木</span><span class="load"><i style="width:21%"></i></span></label><label for="d4" class="cell " data-dn="31"><span class="dn">31</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d5" class="cell  now" data-dn="1"><span class="dn">1</span><span class="dw">土</span><span class="load"><i style="width:114%"></i></span><span class="nowtag">今日</span></label><label for="d6" class="cell " data-dn="2"><span class="dn">2</span><span class="dw">日</span><span class="load"><i style="width:119%"></i></span></label></div>
   </div>
   <div class="wk">
     <div class="wkh"><span class="wkr">8/3 – 8/9</span><span class="wkt">コンピュータ〜DB・NW・セキュリティ</span></div>
-    <div class="row"><label for="d7" class="cell "><span class="dn">3</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d8" class="cell "><span class="dn">4</span><span class="dw">火</span><span class="load"><i style="width:35%"></i></span></label><label for="d9" class="cell "><span class="dn">5</span><span class="dw">水</span><span class="load"><i style="width:53%"></i></span></label><label for="d10" class="cell "><span class="dn">6</span><span class="dw">木</span><span class="load"><i style="width:35%"></i></span></label><label for="d11" class="cell "><span class="dn">7</span><span class="dw">金</span><span class="load"><i style="width:44%"></i></span></label><label for="d12" class="cell "><span class="dn">8</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d13" class="cell "><span class="dn">9</span><span class="dw">日</span><span class="load"><i style="width:119%"></i></span></label></div>
+    <div class="row"><label for="d7" class="cell " data-dn="3"><span class="dn">3</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d8" class="cell " data-dn="4"><span class="dn">4</span><span class="dw">火</span><span class="load"><i style="width:35%"></i></span></label><label for="d9" class="cell " data-dn="5"><span class="dn">5</span><span class="dw">水</span><span class="load"><i style="width:53%"></i></span></label><label for="d10" class="cell " data-dn="6"><span class="dn">6</span><span class="dw">木</span><span class="load"><i style="width:35%"></i></span></label><label for="d11" class="cell " data-dn="7"><span class="dn">7</span><span class="dw">金</span><span class="load"><i style="width:44%"></i></span></label><label for="d12" class="cell " data-dn="8"><span class="dn">8</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d13" class="cell " data-dn="9"><span class="dn">9</span><span class="dw">日</span><span class="load"><i style="width:119%"></i></span></label></div>
   </div>
   <div class="wk">
     <div class="wkh"><span class="wkr">8/10 – 8/16</span><span class="wkt">開発・マネジメント・ストラテジ</span></div>
-    <div class="row"><label for="d14" class="cell "><span class="dn">10</span><span class="dw">月</span><span class="load"><i style="width:44%"></i></span></label><label for="d15" class="cell "><span class="dn">11</span><span class="dw">火</span><span class="load"><i style="width:100%"></i></span></label><label for="d16" class="cell "><span class="dn">12</span><span class="dw">水</span><span class="load"><i style="width:30%"></i></span></label><label for="d17" class="cell "><span class="dn">13</span><span class="dw">木</span><span class="load"><i style="width:30%"></i></span></label><label for="d18" class="cell "><span class="dn">14</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d19" class="cell "><span class="dn">15</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d20" class="cell "><span class="dn">16</span><span class="dw">日</span><span class="load"><i style="width:100%"></i></span></label></div>
+    <div class="row"><label for="d14" class="cell " data-dn="10"><span class="dn">10</span><span class="dw">月</span><span class="load"><i style="width:44%"></i></span></label><label for="d15" class="cell " data-dn="11"><span class="dn">11</span><span class="dw">火</span><span class="load"><i style="width:100%"></i></span></label><label for="d16" class="cell " data-dn="12"><span class="dn">12</span><span class="dw">水</span><span class="load"><i style="width:30%"></i></span></label><label for="d17" class="cell " data-dn="13"><span class="dn">13</span><span class="dw">木</span><span class="load"><i style="width:30%"></i></span></label><label for="d18" class="cell " data-dn="14"><span class="dn">14</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d19" class="cell " data-dn="15"><span class="dn">15</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d20" class="cell " data-dn="16"><span class="dn">16</span><span class="dw">日</span><span class="load"><i style="width:100%"></i></span></label></div>
   </div>
   <div class="wk">
     <div class="wkh"><span class="wkr">8/17 – 8/23</span><span class="wkt">演習・模試・本番通し</span></div>
-    <div class="row"><label for="d21" class="cell "><span class="dn">17</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d22" class="cell "><span class="dn">18</span><span class="dw">火</span><span class="load"><i style="width:30%"></i></span></label><label for="d23" class="cell "><span class="dn">19</span><span class="dw">水</span><span class="load"><i style="width:30%"></i></span></label><label for="d24" class="cell "><span class="dn">20</span><span class="dw">木</span><span class="load"><i style="width:30%"></i></span></label><label for="d25" class="cell "><span class="dn">21</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d26" class="cell "><span class="dn">22</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d27" class="cell "><span class="dn">23</span><span class="dw">日</span><span class="load"><i style="width:100%"></i></span></label></div>
+    <div class="row"><label for="d21" class="cell " data-dn="17"><span class="dn">17</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d22" class="cell " data-dn="18"><span class="dn">18</span><span class="dw">火</span><span class="load"><i style="width:30%"></i></span></label><label for="d23" class="cell " data-dn="19"><span class="dn">19</span><span class="dw">水</span><span class="load"><i style="width:30%"></i></span></label><label for="d24" class="cell " data-dn="20"><span class="dn">20</span><span class="dw">木</span><span class="load"><i style="width:30%"></i></span></label><label for="d25" class="cell " data-dn="21"><span class="dn">21</span><span class="dw">金</span><span class="load"><i style="width:30%"></i></span></label><label for="d26" class="cell " data-dn="22"><span class="dn">22</span><span class="dw">土</span><span class="load"><i style="width:100%"></i></span></label><label for="d27" class="cell " data-dn="23"><span class="dn">23</span><span class="dw">日</span><span class="load"><i style="width:100%"></i></span></label></div>
   </div>
   <div class="wk">
     <div class="wkh"><span class="wkr">8/24 – 8/26</span><span class="wkt">最終仕上げ → 本番</span></div>
-    <div class="row"><label for="d28" class="cell "><span class="dn">24</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d29" class="cell "><span class="dn">25</span><span class="dw">火</span><span class="load"><i style="width:30%"></i></span></label><label for="d30" class="cell  exam"><span class="dn">26</span><span class="dw">水</span></label></div>
+    <div class="row"><label for="d28" class="cell " data-dn="24"><span class="dn">24</span><span class="dw">月</span><span class="load"><i style="width:30%"></i></span></label><label for="d29" class="cell " data-dn="25"><span class="dn">25</span><span class="dw">火</span><span class="load"><i style="width:30%"></i></span></label><label for="d30" class="cell  exam" data-dn="26"><span class="dn">26</span><span class="dw">水</span></label></div>
   </div>
   <div class="legend">
     <span><i style="background:var(--ok)">✓</i>済</span>
@@ -285,12 +287,12 @@ body.js .bkt em{display:none}
     <span><i style="background:var(--accs);box-shadow:inset 0 0 0 2px var(--acc)"></i>今日</span>
     <span>細い線 = 学習量（長い＝3.5h）</span>
     <span style="width:100%;color:var(--acc);font-weight:700">👆 日付をタップすると、その日の予定が下に出ます</span>
-    <span style="width:100%">緑の✓ = チャットで記録済み（このボードに焼き込み済み）</span>
+    <span style="width:100%">✓ と ◐ はチェックの状況から自動でつきます。全部チェックすれば緑、途中なら半。</span>
   </div>
 </div>
 
 <div class="card panecard">
-<div class="pane" id="p0" data-day="0" data-total="4">
+<div class="pane" id="p0" data-day="0" data-total="4" data-rec="済">
   <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
   <div class="tdh"><span class="d">7/27</span><span class="w2">（月）</span><span class="h">2.0h</span><span class="pst done">済</span></div>
   <div class="tdt">準備日 ─ 申込確認・実力測定・環境づくり</div>
@@ -317,7 +319,7 @@ body.js .bkt em{display:none}
   <div class="pmemo"><b>チャットでの記録</b>CBT予約済み／過去問A20問 正答率65%／序章・科目B着手＋アカウント作成済み</div>
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/27<span class="r0_1"> 1済</span><span class="r0_2"> 2済</span><span class="r0_3"> 3済</span><span class="r0_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p1" data-day="1" data-total="3">
+<div class="pane" id="p1" data-day="1" data-total="3" data-rec="済">
   <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
   <div class="tdh"><span class="d">7/28</span><span class="w2">（火）</span><span class="h">2.3h</span><span class="pst done">済</span></div>
   <div class="tdt">第1章 基礎理論①（データの単位〜2進数の四則演算）</div>
@@ -340,7 +342,7 @@ body.js .bkt em{display:none}
   <div class="pmemo"><b>チャットでの記録</b>1〜3すべて実施。出る順問題集は完了。過去問道場は分類が広く範囲外の問題が多かったため中断（→分野別過去問題の小分類に切替済み）</div>
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/28<span class="r1_1"> 1済</span><span class="r1_2"> 2済</span><span class="r1_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p2" data-day="2" data-total="4">
+<div class="pane" id="p2" data-day="2" data-total="4" data-rec="済">
   <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
   <div class="tdh"><span class="d">7/29</span><span class="w2">（水）</span><span class="h">2.4h</span><span class="pst done">済</span></div>
   <div class="tdt">第2章① 集合と論理演算・論理回路</div>
@@ -367,7 +369,7 @@ body.js .bkt em{display:none}
   <div class="pmemo"><b>チャットでの記録</b>1〜4すべて実施。第1章 完了</div>
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/29<span class="r2_1"> 1済</span><span class="r2_2"> 2済</span><span class="r2_3"> 3済</span><span class="r2_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p3" data-day="3" data-total="4">
+<div class="pane" id="p3" data-day="3" data-total="4" data-rec="半">
   <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
   <div class="tdh"><span class="d">7/30</span><span class="w2">（木）</span><span class="h">1.8h</span><span class="pst part">半</span></div>
   <div class="tdt">第2章② 逆ポーランド記法・オートマトン・AI</div>
@@ -394,9 +396,9 @@ body.js .bkt em{display:none}
   <div class="pmemo"><b>チャットでの記録</b>2済：科目B 繰り返し（while/for）＋公式問3・問4／3済：科目A第2章の動画＋第3章①の動画も前倒し視聴、第2章の教科書問題も実施。1（高速復習）と4（章末＋道場20問）は未着手</div>
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/30<span class="r3_1"> 1済</span><span class="r3_2"> 2済</span><span class="r3_3"> 3済</span><span class="r3_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p4" data-day="4" data-total="4">
+<div class="pane" id="p4" data-day="4" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">過去の予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">7/31</span><span class="w2">（金）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">7/31</span><span class="w2">（金）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">キャッチアップ ＋ 第3章 03-01 データ構造</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>03-01 データ構造</span><span>22-01 [科目B]の特徴</span></div>
   <input type="checkbox" class="tick" id="c4_1"><input type="checkbox" class="tick" id="c4_2"><input type="checkbox" class="tick" id="c4_3"><input type="checkbox" class="tick" id="c4_4">
@@ -421,9 +423,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">7/31<span class="r4_1"> 1済</span><span class="r4_2"> 2済</span><span class="r4_3"> 3済</span><span class="r4_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p5" data-day="5" data-total="4">
+<div class="pane" id="p5" data-day="5" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">今日のメニュー<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/1</span><span class="w2">（土）</span><span class="h">3.8h</span></div>
+  <div class="tdh"><span class="d">8/1</span><span class="w2">（土）</span><span class="h">3.8h</span><span class="pst "></span></div>
   <div class="tdt">第3章 03-02〜03-05 ＋ 第12章 12-04 オブジェクト指向</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>03-02 アルゴリズムの基本</span><span>03-03 アルゴリズムの分類</span><span>03-04 プログラムの性質と種類</span><span>03-05 その他の言語</span><span>12-04 プログラミングとオブジェクト指向</span></div>
   <input type="checkbox" class="tick" id="c5_1"><input type="checkbox" class="tick" id="c5_2"><input type="checkbox" class="tick" id="c5_3"><input type="checkbox" class="tick" id="c5_4">
@@ -448,9 +450,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/1<span class="r5_1"> 1済</span><span class="r5_2"> 2済</span><span class="r5_3"> 3済</span><span class="r5_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p6" data-day="6" data-total="4">
+<div class="pane" id="p6" data-day="6" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/2</span><span class="w2">（日）</span><span class="h">3.9h</span></div>
+  <div class="tdh"><span class="d">8/2</span><span class="w2">（日）</span><span class="h">3.9h</span><span class="pst "></span></div>
   <div class="tdt">第4章① CPU・記憶装置（04-01〜04-03）</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>04-01 CPU（プロセッサ）</span><span>04-02 CPUが処理する流れ</span><span>04-03 さまざまな記憶装置</span><span>22-02 [科目B]試験対策① アルゴリズムとプログラミング</span></div>
   <input type="checkbox" class="tick" id="c6_1"><input type="checkbox" class="tick" id="c6_2"><input type="checkbox" class="tick" id="c6_3"><input type="checkbox" class="tick" id="c6_4">
@@ -475,9 +477,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/2<span class="r6_1"> 1済</span><span class="r6_2"> 2済</span><span class="r6_3"> 3済</span><span class="r6_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p7" data-day="7" data-total="4">
+<div class="pane" id="p7" data-day="7" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/3</span><span class="w2">（月）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/3</span><span class="w2">（月）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">第5章 システムの構成要素（05-01〜05-04）</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>05-01 「処理の仕方」によるシステムの分類</span><span>05-02 「システム構成」によるシステムの分類</span><span>05-03 システムの性能指標</span><span>05-04 システムの信頼性指標</span></div>
   <input type="checkbox" class="tick" id="c7_1"><input type="checkbox" class="tick" id="c7_2"><input type="checkbox" class="tick" id="c7_3"><input type="checkbox" class="tick" id="c7_4">
@@ -502,9 +504,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/3<span class="r7_1"> 1済</span><span class="r7_2"> 2済</span><span class="r7_3"> 3済</span><span class="r7_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p8" data-day="8" data-total="4">
+<div class="pane" id="p8" data-day="8" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/4</span><span class="w2">（火）</span><span class="h">2.1h</span></div>
+  <div class="tdh"><span class="d">8/4</span><span class="w2">（火）</span><span class="h">2.1h</span><span class="pst "></span></div>
   <div class="tdt">第6章 ソフトウェア（06-01〜06-05）</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>06-01 オペレーティングシステム</span><span>06-02 データ管理とファイルシステム</span><span>06-03 バックアップ</span><span>06-04 開発ツール</span><span>06-05 オープンソースソフトウェア</span></div>
   <input type="checkbox" class="tick" id="c8_1"><input type="checkbox" class="tick" id="c8_2"><input type="checkbox" class="tick" id="c8_3"><input type="checkbox" class="tick" id="c8_4">
@@ -529,9 +531,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/4<span class="r8_1"> 1済</span><span class="r8_2"> 2済</span><span class="r8_3"> 3済</span><span class="r8_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p9" data-day="9" data-total="4">
+<div class="pane" id="p9" data-day="9" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/5</span><span class="w2">（水）</span><span class="h">2.5h</span></div>
+  <div class="tdh"><span class="d">8/5</span><span class="w2">（水）</span><span class="h">2.5h</span><span class="pst "></span></div>
   <div class="tdt">第4章② 入出力 ＋ 第7章 ハードウェア ＋ 第8章 UI/マルチメディア</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>04-04 入出力インタフェース</span><span>04-05 入出力装置</span><span>07-01 半導体メモリ</span><span>07-02 電子回路</span><span>08-01 ユーザーインタフェース技術</span><span>08-02 ユーザーインタフェース設計</span><span>08-03 マルチメディア技術</span></div>
   <input type="checkbox" class="tick" id="c9_1"><input type="checkbox" class="tick" id="c9_2"><input type="checkbox" class="tick" id="c9_3"><input type="checkbox" class="tick" id="c9_4">
@@ -556,9 +558,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/5<span class="r9_1"> 1済</span><span class="r9_2"> 2済</span><span class="r9_3"> 3済</span><span class="r9_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p10" data-day="10" data-total="4">
+<div class="pane" id="p10" data-day="10" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/6</span><span class="w2">（木）</span><span class="h">2.1h</span></div>
+  <div class="tdh"><span class="d">8/6</span><span class="w2">（木）</span><span class="h">2.1h</span><span class="pst "></span></div>
   <div class="tdt">第9章① データベース（09-01〜09-03 設計・正規化）</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>09-01 データベースの基本</span><span>09-02 関係データベース</span><span>09-03 データベース設計</span></div>
   <input type="checkbox" class="tick" id="c10_1"><input type="checkbox" class="tick" id="c10_2"><input type="checkbox" class="tick" id="c10_3"><input type="checkbox" class="tick" id="c10_4">
@@ -583,9 +585,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/6<span class="r10_1"> 1済</span><span class="r10_2"> 2済</span><span class="r10_3"> 3済</span><span class="r10_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p11" data-day="11" data-total="4">
+<div class="pane" id="p11" data-day="11" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/7</span><span class="w2">（金）</span><span class="h">2.3h</span></div>
+  <div class="tdh"><span class="d">8/7</span><span class="w2">（金）</span><span class="h">2.3h</span><span class="pst "></span></div>
   <div class="tdt">第9章② データベース（09-04〜09-06 DBMS・排他制御）</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>09-04 データベース管理システム</span><span>09-05 トランザクション管理</span><span>09-06 排他制御</span></div>
   <input type="checkbox" class="tick" id="c11_1"><input type="checkbox" class="tick" id="c11_2"><input type="checkbox" class="tick" id="c11_3"><input type="checkbox" class="tick" id="c11_4">
@@ -610,9 +612,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/7<span class="r11_1"> 1済</span><span class="r11_2"> 2済</span><span class="r11_3"> 3済</span><span class="r11_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p12" data-day="12" data-total="4">
+<div class="pane" id="p12" data-day="12" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/8</span><span class="w2">（土）</span><span class="h">3.5h</span></div>
+  <div class="tdh"><span class="d">8/8</span><span class="w2">（土）</span><span class="h">3.5h</span><span class="pst "></span></div>
   <div class="tdt">第10章 ネットワーク（10-01〜10-08）</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>10-01 回線</span><span>10-02 LANとWAN</span><span>10-03 IPアドレス</span><span>10-04 サブネットマスク</span><span>10-05 グローバルIPアドレスとプライベートIPアドレス</span><span>10-06 ドメイン名</span><span>10-07 通信プロトコル</span><span>10-08 インターネット応用</span></div>
   <input type="checkbox" class="tick" id="c12_1"><input type="checkbox" class="tick" id="c12_2"><input type="checkbox" class="tick" id="c12_3"><input type="checkbox" class="tick" id="c12_4">
@@ -637,9 +639,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/8<span class="r12_1"> 1済</span><span class="r12_2"> 2済</span><span class="r12_3"> 3済</span><span class="r12_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p13" data-day="13" data-total="4">
+<div class="pane" id="p13" data-day="13" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/9</span><span class="w2">（日）</span><span class="h">3.9h</span></div>
+  <div class="tdh"><span class="d">8/9</span><span class="w2">（日）</span><span class="h">3.9h</span><span class="pst "></span></div>
   <div class="tdt">第11章 情報セキュリティ（11-01〜11-06）＋ 第22章 22-03</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>11-01 情報セキュリティの脅威</span><span>11-02 暗号技術の基本</span><span>11-03 デジタル署名と認証局</span><span>11-04 リスクマネジメント</span><span>11-05 情報セキュリティマネジメント</span><span>11-06 脅威への対策</span><span>22-03 [科目B]試験対策② 情報セキュリティ</span></div>
   <input type="checkbox" class="tick" id="c13_1"><input type="checkbox" class="tick" id="c13_2"><input type="checkbox" class="tick" id="c13_3"><input type="checkbox" class="tick" id="c13_4">
@@ -664,9 +666,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/9<span class="r13_1"> 1済</span><span class="r13_2"> 2済</span><span class="r13_3"> 3済</span><span class="r13_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p14" data-day="14" data-total="4">
+<div class="pane" id="p14" data-day="14" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/10</span><span class="w2">（月）</span><span class="h">2.3h</span></div>
+  <div class="tdh"><span class="d">8/10</span><span class="w2">（月）</span><span class="h">2.3h</span><span class="pst "></span></div>
   <div class="tdt">第12章 システム開発（12-01〜12-03・12-05）＋ 第13章</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>12-01 システム開発技術</span><span>12-02 システム要件定義</span><span>12-03 システム設計</span><span>12-05 テスト</span><span>13-01 ソフトウェアの開発モデル</span></div>
   <input type="checkbox" class="tick" id="c14_1"><input type="checkbox" class="tick" id="c14_2"><input type="checkbox" class="tick" id="c14_3"><input type="checkbox" class="tick" id="c14_4">
@@ -691,9 +693,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/10<span class="r14_1"> 1済</span><span class="r14_2"> 2済</span><span class="r14_3"> 3済</span><span class="r14_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p15" data-day="15" data-total="4">
+<div class="pane" id="p15" data-day="15" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/11</span><span class="w2">（火・祝）</span><span class="h">3.5h</span></div>
+  <div class="tdh"><span class="d">8/11</span><span class="w2">（火・祝）</span><span class="h">3.5h</span><span class="pst "></span></div>
   <div class="tdt">第14章 PM ＋ 第15章 サービスマネジメント/監査 ＋ 第16章 システム戦略</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>14-01 プロジェクトマネジメント</span><span>14-02 プロジェクトスコープマネジメント</span><span>14-03 プロジェクト資源マネジメント</span><span>14-04 プロジェクトタイムマネジメント</span><span>14-05 プロジェクトコストマネジメント</span><span>14-06 プロジェクトリスクマネジメント</span><span>15-01 サービスマネジメントとシステム移行</span><span>15-02 サービスレベル管理</span><span>15-03 サービスデスク</span><span>15-04 ファシリティマネジメント</span><span>15-05 システム監査</span><span>15-06 内部統制</span><span>16-01 情報システム戦略</span><span>16-02 業務プロセス</span><span>16-03 ソリューションビジネス</span><span>16-04 システムの活用促進と評価</span></div>
   <input type="checkbox" class="tick" id="c15_1"><input type="checkbox" class="tick" id="c15_2"><input type="checkbox" class="tick" id="c15_3"><input type="checkbox" class="tick" id="c15_4">
@@ -718,9 +720,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/11<span class="r15_1"> 1済</span><span class="r15_2"> 2済</span><span class="r15_3"> 3済</span><span class="r15_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p16" data-day="16" data-total="4">
+<div class="pane" id="p16" data-day="16" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/12</span><span class="w2">（水）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/12</span><span class="w2">（水）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">第17章 システム企画 ＋ 第18章 経営戦略マネジメント</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>17-01 企画と要件定義</span><span>17-02 調達計画・実施</span><span>18-01 経営戦略</span><span>18-02 全社戦略</span><span>18-03 事業戦略</span><span>18-04 事業戦略の目標と評価</span><span>18-05 マーケティングの基本</span><span>18-06 経営管理システム</span></div>
   <input type="checkbox" class="tick" id="c16_1"><input type="checkbox" class="tick" id="c16_2"><input type="checkbox" class="tick" id="c16_3"><input type="checkbox" class="tick" id="c16_4">
@@ -745,9 +747,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/12<span class="r16_1"> 1済</span><span class="r16_2"> 2済</span><span class="r16_3"> 3済</span><span class="r16_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p17" data-day="17" data-total="4">
+<div class="pane" id="p17" data-day="17" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/13</span><span class="w2">（木）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/13</span><span class="w2">（木）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">第19章 ビジネスインダストリ ＋ 第20章 企業活動（OR・IE含む）</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>19-01 ビジネスシステム</span><span>19-02 エンジニアリングシステム</span><span>19-03 e-ビジネス</span><span>19-04 組込みシステム・IoTシステム</span><span>20-01 企業活動</span><span>20-02 経営組織</span><span>20-03 OR・IE（待ち行列・線形計画法・在庫管理）</span><span>20-04 損益分岐点</span><span>20-05 財務諸表と6つの利益</span><span>20-06 資産管理</span></div>
   <input type="checkbox" class="tick" id="c17_1"><input type="checkbox" class="tick" id="c17_2"><input type="checkbox" class="tick" id="c17_3"><input type="checkbox" class="tick" id="c17_4">
@@ -772,9 +774,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/13<span class="r17_1"> 1済</span><span class="r17_2"> 2済</span><span class="r17_3"> 3済</span><span class="r17_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p18" data-day="18" data-total="4">
+<div class="pane" id="p18" data-day="18" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/14</span><span class="w2">（金）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/14</span><span class="w2">（金）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">第21章 法務（21-01〜21-04）─ 教科書1周完了</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>21-01 3つの知的財産権</span><span>21-02 産業財産権とその他の権利</span><span>21-03 セキュリティ関連法規</span><span>21-04 労働関連法規と取引関連法規</span></div>
   <input type="checkbox" class="tick" id="c18_1"><input type="checkbox" class="tick" id="c18_2"><input type="checkbox" class="tick" id="c18_3"><input type="checkbox" class="tick" id="c18_4">
@@ -799,9 +801,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/14<span class="r18_1"> 1済</span><span class="r18_2"> 2済</span><span class="r18_3"> 3済</span><span class="r18_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p19" data-day="19" data-total="3">
+<div class="pane" id="p19" data-day="19" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/15</span><span class="w2">（土）</span><span class="h">3.5h</span></div>
+  <div class="tdh"><span class="d">8/15</span><span class="w2">（土）</span><span class="h">3.5h</span><span class="pst "></span></div>
   <div class="tdt">分野別総復習① テクノロジ系（基礎理論・アルゴリズム・コンピュータ）</div>
 
   <input type="checkbox" class="tick" id="c19_1"><input type="checkbox" class="tick" id="c19_2"><input type="checkbox" class="tick" id="c19_3">
@@ -822,9 +824,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/15<span class="r19_1"> 1済</span><span class="r19_2"> 2済</span><span class="r19_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p20" data-day="20" data-total="3">
+<div class="pane" id="p20" data-day="20" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/16</span><span class="w2">（日）</span><span class="h">3.5h</span></div>
+  <div class="tdh"><span class="d">8/16</span><span class="w2">（日）</span><span class="h">3.5h</span><span class="pst "></span></div>
   <div class="tdt">分野別総復習② データベース・ネットワーク・セキュリティ</div>
 
   <input type="checkbox" class="tick" id="c20_1"><input type="checkbox" class="tick" id="c20_2"><input type="checkbox" class="tick" id="c20_3">
@@ -845,9 +847,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/16<span class="r20_1"> 1済</span><span class="r20_2"> 2済</span><span class="r20_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p21" data-day="21" data-total="3">
+<div class="pane" id="p21" data-day="21" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/17</span><span class="w2">（月）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/17</span><span class="w2">（月）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">分野別総復習③ 開発技術・マネジメント</div>
 
   <input type="checkbox" class="tick" id="c21_1"><input type="checkbox" class="tick" id="c21_2"><input type="checkbox" class="tick" id="c21_3">
@@ -868,9 +870,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/17<span class="r21_1"> 1済</span><span class="r21_2"> 2済</span><span class="r21_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p22" data-day="22" data-total="3">
+<div class="pane" id="p22" data-day="22" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/18</span><span class="w2">（火）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/18</span><span class="w2">（火）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">分野別総復習④ ストラテジ系（暗記の一括処理）</div>
 
   <input type="checkbox" class="tick" id="c22_1"><input type="checkbox" class="tick" id="c22_2"><input type="checkbox" class="tick" id="c22_3">
@@ -891,9 +893,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/18<span class="r22_1"> 1済</span><span class="r22_2"> 2済</span><span class="r22_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p23" data-day="23" data-total="3">
+<div class="pane" id="p23" data-day="23" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/19</span><span class="w2">（水）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/19</span><span class="w2">（水）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">科目A ハーフ模試</div>
 
   <input type="checkbox" class="tick" id="c23_1"><input type="checkbox" class="tick" id="c23_2"><input type="checkbox" class="tick" id="c23_3">
@@ -914,9 +916,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/19<span class="r23_1"> 1済</span><span class="r23_2"> 2済</span><span class="r23_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p24" data-day="24" data-total="3">
+<div class="pane" id="p24" data-day="24" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/20</span><span class="w2">（木）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/20</span><span class="w2">（木）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">科目B ハーフ模試</div>
 
   <input type="checkbox" class="tick" id="c24_1"><input type="checkbox" class="tick" id="c24_2"><input type="checkbox" class="tick" id="c24_3">
@@ -937,9 +939,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/20<span class="r24_1"> 1済</span><span class="r24_2"> 2済</span><span class="r24_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p25" data-day="25" data-total="3">
+<div class="pane" id="p25" data-day="25" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/21</span><span class="w2">（金）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/21</span><span class="w2">（金）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">弱点分野の集中潰し</div>
 
   <input type="checkbox" class="tick" id="c25_1"><input type="checkbox" class="tick" id="c25_2"><input type="checkbox" class="tick" id="c25_3">
@@ -960,9 +962,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/21<span class="r25_1"> 1済</span><span class="r25_2"> 2済</span><span class="r25_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p26" data-day="26" data-total="4">
+<div class="pane" id="p26" data-day="26" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/22</span><span class="w2">（土）</span><span class="h">3.5h</span></div>
+  <div class="tdh"><span class="d">8/22</span><span class="w2">（土）</span><span class="h">3.5h</span><span class="pst "></span></div>
   <div class="tdt">🔴 本番シミュレーション：科目A（90分通し）</div>
 
   <input type="checkbox" class="tick" id="c26_1"><input type="checkbox" class="tick" id="c26_2"><input type="checkbox" class="tick" id="c26_3"><input type="checkbox" class="tick" id="c26_4">
@@ -987,9 +989,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/22<span class="r26_1"> 1済</span><span class="r26_2"> 2済</span><span class="r26_3"> 3済</span><span class="r26_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p27" data-day="27" data-total="3">
+<div class="pane" id="p27" data-day="27" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/23</span><span class="w2">（日）</span><span class="h">3.5h</span></div>
+  <div class="tdh"><span class="d">8/23</span><span class="w2">（日）</span><span class="h">3.5h</span><span class="pst "></span></div>
   <div class="tdt">🔴 本番シミュレーション：科目B（100分通し）</div>
 
   <input type="checkbox" class="tick" id="c27_1"><input type="checkbox" class="tick" id="c27_2"><input type="checkbox" class="tick" id="c27_3">
@@ -1010,9 +1012,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/23<span class="r27_1"> 1済</span><span class="r27_2"> 2済</span><span class="r27_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p28" data-day="28" data-total="3">
+<div class="pane" id="p28" data-day="28" data-total="3" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/24</span><span class="w2">（月）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/24</span><span class="w2">（月）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">最終弱点潰し</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>付録-1 重要用語の総復習（寝る前10分）</span></div>
   <input type="checkbox" class="tick" id="c28_1"><input type="checkbox" class="tick" id="c28_2"><input type="checkbox" class="tick" id="c28_3">
@@ -1033,9 +1035,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/24<span class="r28_1"> 1済</span><span class="r28_2"> 2済</span><span class="r28_3"> 3済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p29" data-day="29" data-total="4">
+<div class="pane" id="p29" data-day="29" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/25</span><span class="w2">（火）</span><span class="h">2.0h</span></div>
+  <div class="tdh"><span class="d">8/25</span><span class="w2">（火）</span><span class="h">2.0h</span><span class="pst "></span></div>
   <div class="tdt">前日 ─ 暗記モノの総ざらいと早寝</div>
   <div class="secbox"><b>教科書の担当範囲</b><span>00-04 試験当日の心得</span><span>付録-2 重要用語の総復習（試験直前）</span></div>
   <input type="checkbox" class="tick" id="c29_1"><input type="checkbox" class="tick" id="c29_2"><input type="checkbox" class="tick" id="c29_3"><input type="checkbox" class="tick" id="c29_4">
@@ -1060,9 +1062,9 @@ body.js .bkt em{display:none}
   
   <div class="prep"><b>コピーしてチャットに貼る</b><code class="rep">8/25<span class="r29_1"> 1済</span><span class="r29_2"> 2済</span><span class="r29_3"> 3済</span><span class="r29_4"> 4済</span></code><span class="rephint">↑ 長押しで選択 → コピー</span></div>
 </div>
-<div class="pane" id="p30" data-day="30" data-total="4">
+<div class="pane" id="p30" data-day="30" data-total="4" data-rec="">
   <div class="lab" style="color:var(--acc)">これからの予定<span class="tdc">タップで目印</span></div>
-  <div class="tdh"><span class="d">8/26</span><span class="w2">（水）</span><span class="h">本番</span></div>
+  <div class="tdh"><span class="d">8/26</span><span class="w2">（水）</span><span class="h">本番</span><span class="pst "></span></div>
   <div class="tdt">🎯 基本情報技術者試験 本番</div>
 
   <input type="checkbox" class="tick" id="c30_1"><input type="checkbox" class="tick" id="c30_2"><input type="checkbox" class="tick" id="c30_3"><input type="checkbox" class="tick" id="c30_4">
@@ -1379,19 +1381,54 @@ body.js .bkt em{display:none}
       var on = all.filter(function (t) { return t.checked; }).length;
       p.style.setProperty('--pct', all.length ? Math.round(on / all.length * 100) : 0);
     });
+    restatus();
     pace();
   }
 
-  /* ---------- 遅れの自動検知 ---------- */
+  /* ---------- チェックから 済/半 を判定して全体に反映 ---------- */
+  var ICON = { '済': '✓', '半': '◐', '×': '×' };
+  var KIND = { '済': 'done', '半': 'part', '×': 'miss' };
+
   function dayStat(i) {
     var p = document.querySelector('.pane[data-day="' + i + '"]');
     if (!p) return null;
     var all = [].slice.call(p.querySelectorAll('.tick'));
     if (!all.length) return null;
     var on = all.filter(function (t) { return t.checked; }).length;
-    /* チャットで「済」と記録した日は、タスク単位の記録が無くても完了として扱う */
-    var done = !!p.querySelector('.pst.done');
-    return { all: all.length, on: on, full: done || on === all.length };
+    var rec = p.getAttribute('data-rec') || '';
+    /* チェックが1つでも入っていればそれを優先。無ければチャットでの記録を残す */
+    var s = on === all.length ? '済' : on > 0 ? '半' : rec;
+    return { all: all.length, on: on, s: s, full: s === '済' };
+  }
+
+  function restatus() {
+    var nDone = 0, nPart = 0, nMiss = 0;
+    for (var i = 0; i < EXAM; i++) {
+      var st = dayStat(i); if (!st) continue;
+      if (st.s === '済') nDone++; else if (st.s === '半') nPart++; else if (st.s === '×') nMiss++;
+
+      /* カレンダーのマス */
+      var cell = document.querySelector('label[for=d' + i + ']');
+      if (cell) {
+        cell.classList.remove('done', 'part', 'miss');
+        if (KIND[st.s]) cell.classList.add(KIND[st.s]);
+        var dn = cell.querySelector('.dn');
+        if (dn) dn.textContent = ICON[st.s] || cell.getAttribute('data-dn') || '';
+      }
+      /* パネルのバッジ */
+      var pst = document.querySelector('.pane[data-day="' + i + '"] .pst');
+      if (pst) { pst.className = 'pst ' + (KIND[st.s] || ''); pst.textContent = st.s; }
+      /* 全30日の記録のチップ */
+      var chip = document.querySelectorAll('.lr .chip')[i];
+      if (chip) { chip.className = 'chip ' + (KIND[st.s] || 'none'); chip.textContent = st.s || '未'; }
+    }
+    var logged = nDone + nPart + nMiss, TOT = 30;
+    var set = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+    set('hDone', nDone); set('hLogged', logged);
+    set('tDone', nDone); set('tPart', nPart); set('tMiss', nMiss); set('tNone', TOT - logged);
+    var bd = document.getElementById('hBarDone'), bp = document.getElementById('hBarPart');
+    if (bd) bd.style.width = (nDone / TOT * 100) + '%';
+    if (bp) bp.style.width = (nPart / TOT * 100) + '%';
   }
   function pace() {
     var el = document.getElementById('pace'); if (!el) return;
@@ -1489,8 +1526,15 @@ body.js .bkt em{display:none}
     });
   });
   var savedT = get(TKEY, null);
-  if (savedT && savedT.end > Date.now()) { running = savedT; rtick = setInterval(loop, 1000); }
-  else if (savedT) put(TKEY, null);
+  if (savedT && savedT.end > Date.now()) {
+    running = savedT; rtick = setInterval(loop, 1000);
+  } else if (savedT && Date.now() - savedT.end < 12 * 3600000) {
+    /* 画面を閉じている間に鳴り終わった場合。戻ってきた時点で完了にする。
+       12時間以上前のものは、start しっぱなしの取り残しとみなして捨てる。 */
+    running = savedT; loop();
+  } else if (savedT) {
+    put(TKEY, null);
+  }
   paint();
 
   /* ---------- 2. 正答率の記録とグラフ ---------- */
