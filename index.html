@@ -226,6 +226,10 @@ body.js .bkt em{display:none}
 .sp{font-weight:800}.sp.hit{color:var(--ok)}
 .sx{border:0;background:transparent;color:var(--miss);font-size:17px;font-family:inherit;
  cursor:pointer;padding:2px;line-height:1;-webkit-tap-highlight-color:transparent}
+.code{margin:9px 0;padding:13px;background:var(--faint);border-radius:10px;text-align:center;
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:19px;font-weight:800;
+ letter-spacing:.08em;word-break:break-all;-webkit-user-select:all;user-select:all;color:var(--acc)}
+#syncbox .btn{margin-top:8px}
 .ta{width:100%;margin-top:8px;padding:10px;border:1.5px solid var(--line);border-radius:10px;
  background:var(--faint);color:var(--ink);font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
  resize:vertical;min-height:62px;-webkit-user-select:all;user-select:all}
@@ -1113,6 +1117,25 @@ body.js .bkt em{display:none}
   <div class="note">↑ 予定を組み直したいときだけ、この行をチャットに送ってください。普段は不要です。</div>
 </div>
 
+<div class="card" id="syncbox">
+  <div class="lab">端末間の同期</div>
+  <div class="s-off">
+    <p class="note" style="margin-top:7px">iPhone・iPad・PCで記録を共有します。<b style="color:var(--ink)">最初の端末で「同期コードを作る」</b>を押し、出てきたコードを他の端末で入力してください。</p>
+    <button type="button" class="btn" id="syncgen">同期コードを作る</button>
+    <p class="note" style="margin-top:13px">すでにコードがあるなら、こちらに入力してください。</p>
+    <input class="inp" id="syncin" placeholder="同期コードを貼り付け" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button type="button" class="btn btn2" id="syncconn">この端末をつなぐ</button>
+  </div>
+  <div class="s-on" style="display:none">
+    <p class="note" style="margin-top:7px">他の端末では、このコードを入力してください。</p>
+    <div class="code" id="synccode"></div>
+    <button type="button" class="btn btn2" id="synccopy">コードをコピー</button>
+    <div class="sstat ok" id="syncstat">開いたとき・変更したとき・1分ごとに自動で同期します。</div>
+    <button type="button" class="btn" id="syncnow">今すぐ同期</button>
+    <button type="button" class="btn btn2" id="syncoff">この端末の同期を解除</button>
+  </div>
+</div>
+
 <div class="card">
   <div class="lab">バックアップ／端末の引っ越し</div>
   <p class="note" style="margin-top:7px">下の文字列が記録のすべてです。別の端末で使うときや、消えたときの保険として、メモアプリに貼っておいてください。</p>
@@ -1300,7 +1323,7 @@ body.js .bkt em{display:none}
 
 </div>
 <div class="saved" id="toast"></div>
-<script>window.FE={"start":"2026-07-27","exam":30,"dates":["7/27","7/28","7/29","7/30","7/31","8/1","8/2","8/3","8/4","8/5","8/6","8/7","8/8","8/9","8/10","8/11","8/12","8/13","8/14","8/15","8/16","8/17","8/18","8/19","8/20","8/21","8/22","8/23","8/24","8/25","8/26"]}</script>
+<script>window.FE={"start":"2026-07-27","exam":30,"dates":["7/27","7/28","7/29","7/30","7/31","8/1","8/2","8/3","8/4","8/5","8/6","8/7","8/8","8/9","8/10","8/11","8/12","8/13","8/14","8/15","8/16","8/17","8/18","8/19","8/20","8/21","8/22","8/23","8/24","8/25","8/26"],"sync":{"url":"https://wnwfdhduixqjbzwkztbf.supabase.co","key":"sb_publishable_YDsnNJsLEFp_ei4jia8zpA_QwB6EAPp"}}</script>
 <script>/* 保存レイヤー＋自走機能。JSが動かない環境でもチェックはCSSだけで機能する。
    window.FE = { start:'2026-07-27', exam:30, dates:['7/27',...] } を前提にする。 */
 (function () {
@@ -1600,7 +1623,8 @@ body.js .bkt em{display:none}
       b.addEventListener('click', function () {
         var d = b.getAttribute('data-d');
         scores = scores.filter(function (s) { return s.d !== d; });
-        put(SKEY, scores); chart(); table(); stat(); refreshExp(); flash('削除しました');
+        meta.del[d] = Date.now(); saveMeta();
+        put(SKEY, scores); chart(); table(); stat(); refreshExp(); queuePush(); flash('削除しました');
       });
     });
   }
@@ -1637,7 +1661,8 @@ body.js .bkt em{display:none}
       if (c > n) { flash('正解数が問題数を超えています'); return; }
       scores = scores.filter(function (s) { return s.d !== d; });
       scores.push({ d: d, c: c, n: n }); sortScores();
-      put(SKEY, scores); chart(); table(); stat(); refreshExp();
+      meta.score[d] = Date.now(); delete meta.del[d]; saveMeta();
+      put(SKEY, scores); chart(); table(); stat(); refreshExp(); queuePush();
       ci.value = ''; ni.value = '';
       flash('正答率を記録しました');
     });
@@ -1694,6 +1719,164 @@ body.js .bkt em{display:none}
         + '公開URLをSafariやChromeで開けば保存が有効になります。';
     }
   }
+  /* ---------- 端末間の同期 ----------
+     方針：タスク1件・正答率1件ごとに更新時刻を持ち、新しいほうを採用する。
+     時刻が同じ（＝導入直後の移行データ）ときは「付いている」ほうを優先するので、
+     初回同期でどちらの端末の記録も失われない。 */
+  var SYNC = FE.sync || {}, CKEY = 'fe-sync-v1', MKEY = 'fe-meta-v1';
+  var syncCode = (get(CKEY, {}) || {}).code || '';
+  var meta = get(MKEY, null) || { tick: {}, score: {}, del: {} };
+  var pushTimer = null, syncing = false;
+
+  function saveMeta() { put(MKEY, meta); }
+  function stamp() { return Date.now(); }
+
+  /* いま画面にある状態を、同期用のかたちに書き出す */
+  function snapshot() {
+    var tick = {};
+    ticks.forEach(function (t) {
+      var id = t.id.replace('c', '');
+      tick[id] = { v: t.checked ? 1 : 0, t: meta.tick[id] || 0 };
+    });
+    var score = {};
+    scores.forEach(function (s) { score[s.d] = { c: s.c, n: s.n, t: meta.score[s.d] || 0 }; });
+    return { v: 2, tick: tick, score: score, del: meta.del || {} };
+  }
+
+  /* 相手の状態を取り込む。戻り値は「こちらが変わったか」 */
+  function mergeIn(remote) {
+    if (!remote || remote.v !== 2) return false;
+    var changed = false;
+
+    var rt = remote.tick || {};
+    for (var id in rt) {
+      var r = rt[id], cb = document.getElementById('c' + id);
+      if (!cb) continue;
+      var lt = meta.tick[id] || 0, cur = cb.checked ? 1 : 0;
+      var win = r.t > lt ? r : r.t < lt ? null : (r.v ? r : null);   /* 同時刻なら付いている方 */
+      if (!win || win.v === cur) { if (r.t > lt) meta.tick[id] = r.t; continue; }
+      cb.checked = !!win.v;
+      meta.tick[id] = Math.max(lt, r.t);
+      changed = true;
+    }
+
+    var rs = remote.score || {}, rd = remote.del || {};
+    for (var d in rd) if (!meta.del[d] || rd[d] > meta.del[d]) { meta.del[d] = rd[d]; }
+    for (var d2 in rs) {
+      var e = rs[d2], mine = null;
+      for (var i = 0; i < scores.length; i++) if (scores[i].d === d2) { mine = scores[i]; break; }
+      var myT = meta.score[d2] || 0;
+      if (mine && e.t <= myT) continue;
+      if ((meta.del[d2] || 0) > e.t) continue;                      /* こちらで消した後の古いデータ */
+      if (mine) { mine.c = e.c; mine.n = e.n; }
+      else scores.push({ d: d2, c: e.c, n: e.n });
+      meta.score[d2] = e.t; changed = true;
+    }
+    /* 相手が消した分をこちらからも消す */
+    var before = scores.length;
+    scores = scores.filter(function (s) { return !((meta.del[s.d] || 0) > (meta.score[s.d] || 0)); });
+    if (scores.length !== before) changed = true;
+
+    if (changed) { sortScores(); put(KEY, getState()); put(SKEY, scores); }
+    saveMeta();
+    return changed;
+  }
+
+  function setStatus(msg, kind) {
+    var e = document.getElementById('syncstat');
+    if (e) { e.textContent = msg; e.className = 'sstat ' + (kind || 'ok'); }
+  }
+
+  function rpc(fn, body) {
+    if (!SYNC.url || !SYNC.key) return Promise.reject(new Error('未設定'));
+    return fetch(SYNC.url + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: { apikey: SYNC.key, Authorization: 'Bearer ' + SYNC.key, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.status === 204 ? null : r.json();
+    });
+  }
+
+  function syncNow(quiet) {
+    if (!syncCode || syncing) return Promise.resolve();
+    syncing = true;
+    if (!quiet) setStatus('同期中…', 'ok');
+    return rpc('get_board', { p_id: syncCode })
+      .then(function (remote) {
+        var changed = mergeIn(remote);
+        if (changed) { bars(); chart(); table(); stat(); refreshExp(); }
+        return rpc('put_board', { p_id: syncCode, p_data: snapshot() });
+      })
+      .then(function () {
+        setStatus('✓ 同期しました（' + new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) + '）', 'ok');
+      })
+      .catch(function (e) {
+        var m = String(e && e.message || '');
+        var why = /fetch|network|NetworkError/i.test(m) ? '通信できませんでした'
+          : /HTTP 4/.test(m) ? '接続設定に問題があります（' + m + '）'
+          : /HTTP 5/.test(m) ? 'サーバー側が応答しません（' + m + '）'
+          : m || '不明なエラー';
+        setStatus('同期できませんでした — ' + why + '。オフラインでも記録は手元に残り、通信が戻れば自動で送信します。', 'ng');
+      })
+      .then(function () { syncing = false; });
+  }
+
+  function queuePush() {
+    if (!syncCode) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(function () { syncNow(true); }, 1500);
+  }
+
+  /* 変更を記録したら同期を予約する */
+  ticks.forEach(function (t) {
+    t.addEventListener('change', function () {
+      meta.tick[t.id.replace('c', '')] = stamp();
+      saveMeta(); queuePush();
+    });
+  });
+
+  /* 同期カードのUI */
+  function paintSync() {
+    var box = document.getElementById('syncbox'); if (!box) return;
+    var on = !!syncCode;
+    box.querySelector('.s-off').style.display = on ? 'none' : 'block';
+    box.querySelector('.s-on').style.display = on ? 'block' : 'none';
+    if (on) box.querySelector('#synccode').textContent = syncCode;
+  }
+  function setCode(c) {
+    syncCode = (c || '').trim();
+    put(CKEY, { code: syncCode });
+    paintSync();
+    if (syncCode) syncNow();
+  }
+  var sg = document.getElementById('syncgen'), sc = document.getElementById('syncconn'),
+      si = document.getElementById('syncin'), sn = document.getElementById('syncnow'),
+      sx = document.getElementById('syncoff'), scp = document.getElementById('synccopy');
+  if (sg) sg.addEventListener('click', function () {
+    var a = 'abcdefghijkmnpqrstuvwxyz23456789', s = '';
+    var r = new Uint8Array(14); (window.crypto || {}).getRandomValues && crypto.getRandomValues(r);
+    for (var i = 0; i < 14; i++) s += a[(r[i] || i * 7) % a.length];
+    setCode(s); flash('同期コードを作りました');
+  });
+  if (sc) sc.addEventListener('click', function () {
+    var v = (si.value || '').trim();
+    if (v.length < 6) { flash('コードが短すぎます'); return; }
+    setCode(v); flash('接続しました');
+  });
+  if (sn) sn.addEventListener('click', function () { syncNow(); });
+  if (scp) scp.addEventListener('click', function () { copyText(syncCode, null); });
+  if (sx) sx.addEventListener('click', function () { setCode(''); setStatus('この端末の同期を解除しました', 'ng'); flash('解除しました'); });
+  paintSync();
+
+  if (syncCode) {
+    syncNow();
+    setInterval(function () { syncNow(true); }, 60000);          /* 定期的に取り込む */
+    window.addEventListener('online', function () { syncNow(true); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) syncNow(true); });
+  }
+
   /* ---------- オフライン対応（https / localhost のみ） ---------- */
   if ('serviceWorker' in navigator
       && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
