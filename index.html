@@ -4,18 +4,15 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" href="./icon-192.png" type="image/png">
-<meta name="theme-color" media="(prefers-color-scheme:light)" content="#f4f7fc">
-<meta name="theme-color" media="(prefers-color-scheme:dark)" content="#0b1220">
+<meta name="theme-color" content="#f4f7fc">
+<meta name="color-scheme" content="light only">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FE進捗">
 <style>
-:root{
+:root{color-scheme:light only;
  --bg:#f4f7fc;--card:#fff;--ink:#0e1a2e;--sub:#5a6b85;--line:#dbe4f2;--faint:#eef3fb;
  --acc:#1d4ed8;--acc2:#1741b6;--accs:#e7efff;--accs2:#d3e2ff;--chart:#1d4ed8;--onacc:#fff}
-@media(prefers-color-scheme:dark){:root{
- --bg:#0b1220;--card:#131d31;--ink:#e9effb;--sub:#93a5c2;--line:#243350;--faint:#182338;
- --acc:#6f9bf5;--acc2:#8fb4ff;--accs:#16233c;--accs2:#1d2f4e;--chart:#5b8ae8;--onacc:#08101f}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.62;
  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
